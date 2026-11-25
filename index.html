@@ -4,144 +4,226 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calicut University FYUGP — Internal Marks & APC Excel Generator</title>
-  <!-- PDF.js & ExcelJS (with full styling support for borders, Cambria fonts, merged cells, page setup) -->
+
+  <!-- Reliable JS Libraries for Client-Side PDF Parsing & Excel Generation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <!-- Google Font: Plus Jakarta Sans (with clean system-ui fallback) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
   <style>
+    /* ==========================================================================
+       1. 100% SELF-CONTAINED DESIGN SYSTEM (NO EXTERNAL CSS DEPENDENCIES)
+       ========================================================================== */
     :root {
-      --bg: #f1f5f9;
-      --surface: #ffffff;
-      --surface-alt: #f8fafc;
-      --border: #cbd5e1;
+      --bg-page: #f4f6fb;
+      --bg-card: #ffffff;
+      --bg-subtle: #f8fafc;
+      --bg-muted: #f1f5f9;
       --border-light: #e2e8f0;
-      --text: #0f172a;
-      --text-muted: #475569;
-      --text-light: #64748b;
-      --primary: #1e3a8a;
-      --primary-hover: #172554;
-      --primary-soft: #eff6ff;
-      --emerald: #047857;
-      --emerald-hover: #065f46;
-      --emerald-soft: #ecfdf5;
-      --amber: #b45309;
-      --amber-soft: #fffbeb;
-      --red: #b91c1c;
-      --red-soft: #fef2f2;
-      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
-      --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
-      --radius: 10px;
+      --border-medium: #cbd5e1;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+
+      --indigo-600: #4f46e5;
+      --indigo-700: #4338ca;
+      --indigo-50: #eef2ff;
+      --indigo-100: #e0e7ff;
+      --indigo-200: #c7d2fe;
+
+      --emerald-600: #059669;
+      --emerald-700: #047857;
+      --emerald-50: #ecfdf5;
+      --emerald-100: #d1fae5;
+      --emerald-200: #a7f3d0;
+
+      --amber-600: #d97706;
+      --amber-700: #b45309;
+      --amber-50: #fffbeb;
+      --amber-200: #fde68a;
+
+      --rose-600: #e11d48;
+      --rose-700: #be123c;
+      --rose-50: #fff1f2;
+      --rose-200: #fecdd3;
+
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.07), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+      --shadow-lg: 0 16px 32px -8px rgba(15, 23, 42, 0.14);
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 18px;
     }
 
-    * {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
       line-height: 1.5;
-      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
     }
 
-    /* Strict SVG size guard so icons never render giant */
+    /* Strict SVG Protection so icons never explode in size */
     svg {
+      flex-shrink: 0;
       display: inline-block;
       vertical-align: middle;
-      flex-shrink: 0;
-      max-width: 36px;
-      max-height: 36px;
     }
 
-    /* Header */
+    button, input {
+      font-family: inherit;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ==========================================================================
+       2. TOP NAVIGATION BAR
+       ========================================================================== */
     .topbar {
-      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
-      color: #ffffff;
-      padding: 18px 24px;
-      box-shadow: var(--shadow-md);
+      background: #ffffff;
+      border-bottom: 1px solid var(--border-light);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      box-shadow: var(--shadow-sm);
     }
 
     .topbar-inner {
-      max-width: 1280px;
+      max-width: 1360px;
       margin: 0 auto;
+      padding: 14px 24px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      gap: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--indigo-600), #312e81);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
     }
 
     .brand-title {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
+      font-size: 1.125rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-wrap: wrap;
     }
 
-    .brand-sub {
-      font-size: 12.5px;
-      color: #cbd5e1;
+    .brand-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
       margin-top: 2px;
     }
 
-    .badge-pill {
-      background: rgba(255, 255, 255, 0.14);
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      color: #f8fafc;
+    .reg-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--indigo-50);
+      color: var(--indigo-700);
+      border: 1px solid var(--indigo-200);
       padding: 5px 12px;
       border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
     }
 
-    /* Main container */
+    /* ==========================================================================
+       3. MAIN CONTAINER & TOP SETUP GRID
+       ========================================================================== */
     .container {
-      max-width: 1280px;
-      margin: 22px auto;
-      padding: 0 20px 48px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 24px;
     }
 
-    /* Card */
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 22px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 980px) {
+      .setup-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .card {
-      background: var(--surface);
+      background: var(--bg-card);
       border: 1px solid var(--border-light);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
-      padding: 20px;
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+      padding: 22px;
     }
 
     .card-header {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
       margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-light);
+      gap: 10px;
     }
 
     .card-title {
-      font-size: 15.5px;
+      font-size: 0.98rem;
       font-weight: 700;
-      color: var(--text);
+      color: var(--text-primary);
       display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    /* Dropzone */
+    .step-pill {
+      background: var(--indigo-100);
+      color: var(--indigo-700);
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    /* Drag & Drop Upload Box */
     .dropzone {
-      border: 2px dashed #94a3b8;
-      border-radius: var(--radius);
-      background: var(--surface-alt);
+      border: 2px dashed var(--border-medium);
+      background: var(--bg-subtle);
+      border-radius: var(--radius-lg);
       padding: 28px 20px;
       text-align: center;
       cursor: pointer;
@@ -149,552 +231,861 @@
     }
 
     .dropzone:hover, .dropzone.dragover {
-      border-color: var(--primary);
-      background: var(--primary-soft);
+      border-color: var(--indigo-600);
+      background: var(--indigo-50);
     }
 
     .dropzone-icon {
-      width: 44px;
-      height: 44px;
-      margin: 0 auto 10px;
-      background: #dbeafe;
-      color: var(--primary);
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
-      display: flex;
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      color: var(--indigo-600);
+      display: inline-flex;
       align-items: center;
       justify-content: center;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-sm);
     }
 
     .dropzone h3 {
-      font-size: 15px;
+      font-size: 0.95rem;
       font-weight: 700;
-      color: var(--text);
+      color: var(--text-primary);
       margin-bottom: 4px;
     }
 
     .dropzone p {
-      font-size: 12.5px;
+      font-size: 0.78rem;
       color: var(--text-muted);
+      max-width: 380px;
+      margin: 0 auto 14px;
     }
 
-    /* Form Grid */
-    .grid-3 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 14px;
+    .btn-browse {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: #ffffff;
+      color: var(--text-primary);
+      border: 1px solid var(--border-medium);
+      padding: 8px 16px;
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.15s ease;
     }
 
-    .form-group {
+    .btn-browse:hover {
+      background: var(--bg-muted);
+      border-color: var(--indigo-600);
+      color: var(--indigo-700);
+    }
+
+    /* Uploaded File Pills List */
+    .uploaded-list {
+      margin-top: 16px;
       display: flex;
       flex-direction: column;
-      gap: 5px;
-    }
-
-    .form-group label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    .input-wrap {
-      display: flex;
-      align-items: center;
-    }
-
-    input[type="text"], input[type="number"], select {
-      width: 100%;
-      padding: 8px 11px;
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      font-size: 13.5px;
-      color: var(--text);
-      background: #ffffff;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-
-    input[type="text"]:focus, input[type="number"]:focus, select:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12);
-    }
-
-    .suffix-tag {
-      background: #e2e8f0;
-      border: 1px solid var(--border);
-      border-left: none;
-      padding: 8px 10px;
-      border-radius: 0 7px 7px 0;
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text-muted);
-    }
-
-    .input-with-suffix {
-      border-radius: 7px 0 0 7px !important;
-    }
-
-    /* Checkboxes */
-    .options-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 18px;
-      margin-top: 16px;
-      padding-top: 14px;
-      border-top: 1px solid var(--border-light);
-    }
-
-    .check-label {
-      display: flex;
-      align-items: center;
       gap: 8px;
-      font-size: 13px;
-      color: var(--text);
+      max-height: 230px;
+      overflow-y: auto;
+    }
+
+    .file-pill {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+    }
+
+    .file-pill-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .file-pill-name {
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-pill-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .btn-remove-file {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-remove-file:hover {
+      background: var(--rose-50);
+      color: var(--rose-600);
+    }
+
+    /* Form Controls */
+    .form-group {
+      margin-bottom: 13px;
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .auto-tag {
+      font-size: 0.68rem;
+      font-weight: 700;
+      background: var(--emerald-50);
+      color: var(--emerald-700);
+      border: 1px solid var(--emerald-200);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      font-size: 0.83rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: #ffffff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--indigo-600);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    }
+
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1.5fr 0.7fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .form-row-2, .form-row-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .input-suffix-wrap {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .input-suffix-wrap .form-input {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      border-right: none;
+    }
+
+    .input-suffix {
+      display: inline-flex;
+      align-items: center;
+      padding: 0 10px;
+      background: var(--bg-muted);
+      border: 1px solid var(--border-medium);
+      border-top-right-radius: var(--radius-md);
+      border-bottom-right-radius: var(--radius-md);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .checkbox-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 14px 0 18px;
+      padding: 12px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 0.79rem;
+      color: var(--text-secondary);
       cursor: pointer;
       user-select: none;
     }
 
-    .check-label input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-      accent-color: var(--primary);
+    .checkbox-item input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      margin-top: 2px;
+      accent-color: var(--indigo-600);
       cursor: pointer;
+      flex-shrink: 0;
     }
 
-    /* Action Buttons */
-    .actions-bar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
+    .checkbox-item code {
+      background: #e2e8f0;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.74rem;
+      color: var(--text-primary);
+    }
+
+    /* Action Download Buttons */
+    .action-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
-      margin-top: 18px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border-light);
     }
 
-    .btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
+    @media (max-width: 600px) {
+      .action-buttons {
+        grid-template-columns: 1fr;
+      }
     }
 
-    .btn {
+    .btn-primary {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 13.5px;
+      padding: 12px 16px;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: #ffffff;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-indigo {
+      background: linear-gradient(135deg, var(--indigo-600), var(--indigo-700));
+    }
+
+    .btn-indigo:not(:disabled):hover {
+      background: linear-gradient(135deg, #4338ca, #3730a3);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(79, 70, 229, 0.28);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(135deg, var(--emerald-600), var(--emerald-700));
+    }
+
+    .btn-emerald:not(:disabled):hover {
+      background: linear-gradient(135deg, #047857, #065f46);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(5, 150, 105, 0.28);
+    }
+
+    .btn-clear {
+      background: transparent;
+      border: 1px solid var(--border-medium);
+      color: var(--text-secondary);
+      font-size: 0.74rem;
       font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-clear:hover {
+      background: var(--rose-50);
+      border-color: var(--rose-200);
+      color: var(--rose-700);
+    }
+
+    /* ==========================================================================
+       4. DOUBLE VERIFICATION BANNER & STATS ROW
+       ========================================================================== */
+    .verify-banner {
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 20px;
+      border: 1px solid;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .verify-banner.ok {
+      background: var(--emerald-50);
+      border-color: var(--emerald-200);
+      color: #064e3b;
+    }
+
+    .verify-banner.warn {
+      background: var(--amber-50);
+      border-color: var(--amber-200);
+      color: #78350f;
+    }
+
+    .verify-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .verify-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 0.92rem;
+    }
+
+    .verify-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .stat-chip {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      padding: 4px 11px;
+      border-radius: 8px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .verify-issues-list {
+      margin-left: 26px;
+      font-size: 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* ==========================================================================
+       5. WORKSPACE TABS & DATA TABLES
+       ========================================================================== */
+    .workspace-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .tabs-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 20px;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .tabs-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: var(--radius-md);
       border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.81rem;
+      font-weight: 700;
       cursor: pointer;
       transition: all 0.15s ease;
     }
 
-    .btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #ffffff;
-    }
-    .btn-primary:hover:not(:disabled) {
-      background: var(--primary-hover);
-    }
-
-    .btn-emerald {
-      background: var(--emerald);
-      color: #ffffff;
-    }
-    .btn-emerald:hover:not(:disabled) {
-      background: var(--emerald-hover);
-    }
-
-    .btn-outline {
-      background: #ffffff;
-      color: var(--text);
-      border-color: var(--border);
-    }
-    .btn-outline:hover:not(:disabled) {
-      background: var(--surface-alt);
-      border-color: #94a3b8;
-    }
-
-    .btn-sm {
-      padding: 5px 10px;
-      font-size: 12px;
-      border-radius: 6px;
-    }
-
-    /* Stats Strip */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 12px;
-    }
-
-    .stat-box {
-      background: var(--surface);
-      border: 1px solid var(--border-light);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      box-shadow: var(--shadow-sm);
-    }
-
-    .stat-label {
-      font-size: 11.5px;
-      font-weight: 600;
-      color: var(--text-light);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .stat-val {
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--text);
-      margin-top: 2px;
-    }
-
-    /* Verification Panel */
-    .audit-banner {
-      border-radius: 8px;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .audit-pass {
-      background: var(--emerald-soft);
-      border: 1px solid #a7f3d0;
-      color: #065f46;
-    }
-
-    .audit-warn {
-      background: var(--amber-soft);
-      border: 1px solid #fde68a;
-      color: #92400e;
-    }
-
-    .audit-list {
-      margin-top: 12px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 8px;
-    }
-
-    .audit-item {
-      background: var(--surface-alt);
-      border: 1px solid var(--border-light);
-      border-radius: 7px;
-      padding: 8px 12px;
-      font-size: 12.5px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      border-bottom: 1px solid var(--border-light);
-      padding-bottom: 12px;
-      margin-bottom: 14px;
-    }
-
-    .tab-btn {
-      padding: 8px 14px;
-      border-radius: 7px;
-      font-size: 13px;
-      font-weight: 600;
-      border: 1px solid var(--border-light);
-      background: var(--surface-alt);
-      color: var(--text-muted);
-      cursor: pointer;
+    .tab-btn:hover {
+      background: #e2e8f0;
+      color: var(--text-primary);
     }
 
     .tab-btn.active {
-      background: var(--primary);
-      color: #ffffff;
-      border-color: var(--primary);
+      background: #ffffff;
+      color: var(--indigo-700);
+      border-color: var(--border-light);
+      box-shadow: var(--shadow-sm);
     }
 
-    /* Data Table */
+    .tab-count {
+      background: var(--bg-muted);
+      color: var(--text-primary);
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .tab-btn.active .tab-count {
+      background: var(--indigo-100);
+      color: var(--indigo-700);
+    }
+
+    .search-box {
+      position: relative;
+      width: 280px;
+      max-width: 100%;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 8px 12px 8px 34px;
+      border: 1px solid var(--border-medium);
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      background: #ffffff;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--indigo-600);
+    }
+
     .table-wrap {
+      width: 100%;
       overflow-x: auto;
-      border: 1px solid var(--border-light);
-      border-radius: 8px;
     }
 
-    table {
+    table.data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13px;
+      text-align: left;
+      font-size: 0.82rem;
     }
 
-    th {
+    table.data-table th {
       background: #f8fafc;
-      color: var(--text-muted);
+      color: var(--text-secondary);
       font-weight: 700;
-      text-align: left;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light);
       white-space: nowrap;
     }
 
-    td {
-      padding: 9px 12px;
+    table.data-table td {
+      padding: 12px 16px;
       border-bottom: 1px solid var(--border-light);
       vertical-align: middle;
     }
 
-    tr:hover td {
+    table.data-table tr:hover td {
       background: #f8fafc;
     }
 
     .code-badge {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-weight: 700;
-      background: #eff6ff;
-      color: #1e40af;
-      padding: 3px 7px;
-      border-radius: 5px;
-      font-size: 12px;
+      font-size: 0.78rem;
+      background: var(--indigo-50);
+      color: var(--indigo-700);
+      border: 1px solid var(--indigo-200);
+      padding: 3px 8px;
+      border-radius: 6px;
+      display: inline-block;
     }
 
-    .pill-oe {
-      display: inline-block;
+    .cat-badge {
+      font-size: 0.71rem;
+      font-weight: 700;
       padding: 2px 8px;
       border-radius: 999px;
-      font-size: 11.5px;
-      font-weight: 700;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .cat-major { background: #e0e7ff; color: #3730a3; }
+    .cat-minor { background: #fce7f3; color: #9d174d; }
+    .cat-found { background: #fef3c7; color: #92400e; }
+
+    .oe-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 800;
       cursor: pointer;
+      border: 1px solid;
+      transition: all 0.15s;
     }
 
     .oe-10 {
-      background: #dbeafe;
-      color: #1e3a8a;
+      background: var(--indigo-50);
+      color: var(--indigo-700);
+      border-color: var(--indigo-200);
     }
 
     .oe-5 {
-      background: #fef3c7;
-      color: #92400e;
+      background: var(--emerald-50);
+      color: var(--emerald-700);
+      border-color: var(--emerald-200);
     }
 
-    /* Modal */
+    .btn-icon-sm {
+      background: #ffffff;
+      border: 1px solid var(--border-medium);
+      color: var(--text-secondary);
+      padding: 5px 10px;
+      border-radius: 7px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+
+    .btn-icon-sm:hover {
+      border-color: var(--indigo-600);
+      color: var(--indigo-700);
+      background: var(--indigo-50);
+    }
+
+    .inline-edit-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .inline-edit-input {
+      padding: 5px 8px;
+      border: 1px solid var(--indigo-600);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      width: 240px;
+      max-width: 100%;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state h4 {
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    /* ==========================================================================
+       6. SPREADSHEET LIVE PREVIEW MODAL
+       ========================================================================== */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.55);
-      display: none;
+      background: rgba(15, 23, 42, 0.58);
+      backdrop-filter: blur(2px);
+      z-index: 100;
+      display: flex;
       align-items: center;
       justify-content: center;
       padding: 20px;
-      z-index: 999;
-    }
-
-    .modal-backdrop.open {
-      display: flex;
     }
 
     .modal-box {
       background: #ffffff;
-      border-radius: 12px;
-      max-width: 960px;
+      border-radius: var(--radius-xl);
       width: 100%;
-      max-height: 88vh;
+      max-width: 980px;
+      max-height: 90vh;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
     }
 
     .modal-head {
-      padding: 14px 20px;
+      padding: 16px 22px;
       border-bottom: 1px solid var(--border-light);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
+      background: var(--bg-subtle);
+    }
+
+    .modal-head h3 {
+      font-size: 0.98rem;
+      font-weight: 800;
+      color: var(--text-primary);
     }
 
     .modal-body {
-      padding: 20px;
-      overflow-y: auto;
-      font-family: Cambria, Georgia, "Times New Roman", serif;
+      padding: 22px;
+      overflow: auto;
+      background: #e2e8f0;
     }
 
-    .excel-sim-sheet {
-      border: 1px solid #94a3b8;
-      padding: 16px;
+    .excel-paper {
       background: #ffffff;
-    }
-
-    .excel-sim-header {
-      text-align: center;
-      border: 1px solid #000000;
-      padding: 5px 8px;
-      font-weight: bold;
-      margin-bottom: -1px;
-    }
-
-    .excel-sim-meta {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 8px;
-      font-family: Cambria, Georgia, serif;
-    }
-
-    .excel-sim-meta td {
-      border: 1px solid #000000;
-      padding: 4px 8px;
-      font-size: 13px;
-    }
-
-    .excel-sim-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-family: Cambria, Georgia, serif;
-    }
-
-    .excel-sim-table th, .excel-sim-table td {
-      border: 1px solid #000000;
-      padding: 5px 8px;
-      font-size: 12.5px;
-    }
-
-    .excel-sim-table th {
-      background: #f1f5f9;
-      text-align: center;
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      margin: 0 auto;
+      max-width: 860px;
+      font-family: Cambria, Georgia, 'Times New Roman', serif;
       color: #000000;
     }
 
-    .hidden {
-      display: none !important;
+    .excel-grid {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .excel-grid td, .excel-grid th {
+      border: 1px solid #000000;
+      padding: 5px 7px;
+    }
+
+    .excel-grid .no-border {
+      border: none !important;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      background: #0f172a;
+      color: #ffffff;
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      font-size: 0.82rem;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      max-width: 420px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Header -->
+  <!-- TOP NAVIGATION BAR -->
   <header class="topbar">
     <div class="topbar-inner">
-      <div>
-        <div class="brand-title">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <polyline points="10 9 9 9 8 9"></polyline>
+            <line x1="8" y1="13" x2="16" y2="13"></line>
+            <line x1="8" y1="17" x2="16" y2="17"></line>
           </svg>
-          CUFYUGP Internal Marks &amp; APC Excel Generator
         </div>
-        <div class="brand-sub">University of Calicut (Regulations 2024) • Dynamic Multi-Semester Exam Registration PDF Processor</div>
+        <div>
+          <div class="brand-title">
+            FYUGP Internal Marks &amp; APC Excel Generator
+          </div>
+          <div class="brand-subtitle">
+            University of Calicut Exam Registration PDF &rarr; Course-wise Internal Marks &amp; Programme-wise APC Attendance Workbooks
+          </div>
+        </div>
       </div>
-      <span class="badge-pill">Cambria Format • 2-Pass Verified</span>
+
+      <div class="reg-badge">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        CUFYUGP 2024 &bull; All Semesters &bull; 2-Pass Verified
+      </div>
     </div>
   </header>
 
+  <!-- MAIN APPLICATION CONTAINER -->
   <main class="container">
 
-    <!-- Step 1: Upload & Configuration -->
-    <section class="card">
-      <div class="card-header">
-        <div class="card-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-          1. Upload Exam Registration Report PDFs &amp; Configure Settings
-        </div>
-        <button type="button" id="btnReset" class="btn btn-outline btn-sm hidden">Clear All</button>
-      </div>
+    <!-- STEP 1 & STEP 2: UPLOAD & CONFIGURATION -->
+    <section class="setup-grid">
 
-      <div id="dropZone" class="dropzone">
-        <input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple class="hidden" />
-        <div class="dropzone-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="17 8 12 3 7 8"></polyline>
-            <line x1="12" y1="3" x2="12" y2="15"></line>
-          </svg>
-        </div>
-        <h3>Click or Drag &amp; Drop Programme Exam Registration PDFs</h3>
-        <p>Supports B.Com, B.Sc, BA programmes across any semester (Sem 1 to Sem 8). Upload all programme PDFs together.</p>
-      </div>
-
-      <div class="grid-3" style="margin-top: 16px;">
-        <div class="form-group">
-          <label for="collegeNameInput">College Name (Header Row 1)</label>
-          <input type="text" id="collegeNameInput" value="MIC ARTS AND SCIENCE COLLEGE, ATHANIKAL, VALLUVAMBRAM" />
-        </div>
-        <div class="form-group">
-          <label for="examNameInput">Exam Name (Auto-detected from PDF)</label>
-          <input type="text" id="examNameInput" placeholder="First Semester FYUG Examination November 2026" />
-        </div>
-        <div class="form-group">
-          <label for="workingDaysInput">Total Working Days (APC Row 5)</label>
-          <input type="number" id="workingDaysInput" value="90" min="1" max="365" />
-        </div>
-        <div class="form-group">
-          <label for="internalFileInput">Internal Marks Excel File Name</label>
-          <div class="input-wrap">
-            <input type="text" id="internalFileInput" class="input-with-suffix" value="FYUGP_INTERNAL_MARKS" />
-            <span class="suffix-tag">.xlsx</span>
+      <!-- STEP 1: MULTI-PDF UPLOAD CARD -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="step-pill">Step 1</span>
+            Upload Exam Registration PDFs
           </div>
+          <button type="button" id="btnClearAll" class="btn-clear hidden" onclick="clearAllFiles()">
+            Clear All
+          </button>
         </div>
-        <div class="form-group">
-          <label for="apcFileInput">APC Attendance Excel File Name</label>
-          <div class="input-wrap">
-            <input type="text" id="apcFileInput" class="input-with-suffix" value="FYUG_APC_ATTENDANCE" />
-            <span class="suffix-tag">.xlsx</span>
+
+        <div id="dropzone" class="dropzone" onclick="document.getElementById('pdfFileInput').click()">
+          <div class="dropzone-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
           </div>
-        </div>
-      </div>
-
-      <div class="options-row">
-        <label class="check-label">
-          <input type="checkbox" id="chkInternalFormula" />
-          <span>Internal Excel: Auto-fill <code>=SUM(D7:F7)</code> in Total Internal Marks (20)</span>
-        </label>
-        <label class="check-label">
-          <input type="checkbox" id="chkApcFormula" />
-          <span>APC Excel: Auto-fill Percentage (%) &amp; CUFYUGP 2024 Condonation formula</span>
-        </label>
-        <label class="check-label">
-          <input type="checkbox" id="chkAuditSheet" />
-          <span>Include an extra Verification Audit Summary sheet in workbook</span>
-        </label>
-      </div>
-
-      <div class="actions-bar">
-        <div id="statusText" style="font-size: 13px; color: var(--text-muted); font-weight: 500;">
-          No PDF files loaded yet. Upload PDFs to generate sheets.
-        </div>
-        <div class="btn-group">
-          <button type="button" id="btnDownloadInternal" class="btn btn-primary" disabled>
+          <h3>Drop Calicut University PDF Reports Here</h3>
+          <p>
+            Select all Programme Exam Registration Report PDFs (1st to 8th Semester). Common courses across programmes are merged automatically.
+          </p>
+          <button type="button" class="btn-browse">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Browse PDF Files
+          </button>
+          <input type="file" id="pdfFileInput" accept="application/pdf,.pdf" multiple class="hidden" />
+        </div>
+
+        <div id="uploadedFilesList" class="uploaded-list"></div>
+      </div>
+
+      <!-- STEP 2: REPORT SETTINGS & EXPORT -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="step-pill">Step 2</span>
+            Excel Headers &amp; Export Settings
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="collegeNameInput">
+            <span>College Name (Row 1 Header)</span>
+          </label>
+          <input type="text" id="collegeNameInput" class="form-input"
+                 value="MIC ARTS AND SCIENCE COLLEGE ,ATHANIKAL,VALLUVAMBRAM" />
+        </div>
+
+        <div class="form-row-3 form-group">
+          <div>
+            <label class="form-label" for="examNameInput">
+              <span>Exam Name (Header)</span>
+              <span id="examAutoTag" class="auto-tag hidden">Auto-detected</span>
+            </label>
+            <input type="text" id="examNameInput" class="form-input"
+                   placeholder="Auto-detected from PDF (e.g. First Semester FYUG Examination November 2026)" />
+          </div>
+          <div>
+            <label class="form-label" for="workingDaysInput">
+              <span>Total Working Days (APC)</span>
+            </label>
+            <input type="number" id="workingDaysInput" class="form-input" value="90" min="1" max="300" />
+          </div>
+        </div>
+
+        <div class="form-row-2 form-group">
+          <div>
+            <label class="form-label" for="internalFileNameInput">
+              <span>Internal Marks File Name</span>
+            </label>
+            <div class="input-suffix-wrap">
+              <input type="text" id="internalFileNameInput" class="form-input" value="FYUGP_INTERNAL_MARKS" />
+              <span class="input-suffix">.xlsx</span>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="apcFileNameInput">
+              <span>APC Attendance File Name</span>
+            </label>
+            <div class="input-suffix-wrap">
+              <input type="text" id="apcFileNameInput" class="form-input" value="FYUG_APC_ATTENDANCE" />
+              <span class="input-suffix">.xlsx</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkbox-stack">
+          <label class="checkbox-item">
+            <input type="checkbox" id="chkInternalFormula" />
+            <span>Internal Excel: Auto-fill <code>=SUM(D7:F7)</code> in Total (20) column</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="chkApcFormula" />
+            <span>APC Excel: Auto-calculate Percentage (%) &amp; CUFYUGP 2024 Condonation status</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="chkAuditSummary" />
+            <span>Include an extra <strong>Audit Summary</strong> sheet at the end</span>
+          </label>
+        </div>
+
+        <div class="action-buttons">
+          <button type="button" id="btnDownloadInternal" class="btn-primary btn-indigo" disabled onclick="exportInternalMarksWorkbook()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="7 10 12 15 17 10"></polyline>
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
             Download Internal Marks Excel
           </button>
-          <button type="button" id="btnDownloadApc" class="btn btn-emerald" disabled>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+
+          <button type="button" id="btnDownloadApc" class="btn-primary btn-emerald" disabled onclick="exportApcAttendanceWorkbook()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
               <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
               <path d="M9 14l2 2 4-4"></path>
@@ -703,861 +1094,1311 @@
           </button>
         </div>
       </div>
+
     </section>
 
-    <!-- Summary Stats -->
-    <section id="statsSection" class="stats-grid hidden">
-      <div class="stat-box">
-        <div class="stat-label">Programmes Parsed</div>
-        <div class="stat-val" id="statProgrammes">0</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Unique Students</div>
-        <div class="stat-val" id="statStudents">0</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Unique Courses (Sheets)</div>
-        <div class="stat-val" id="statCourses">0</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Total Course Enrollments</div>
-        <div class="stat-val" id="statEnrollments">0</div>
-      </div>
-    </section>
+    <!-- DOUBLE VERIFICATION BANNER -->
+    <div id="verificationBanner" class="verify-banner ok hidden"></div>
 
-    <!-- 2-Pass Double Verification Report -->
-    <section id="auditSection" class="card hidden">
-      <div class="card-header">
-        <div class="card-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    <!-- WORKSPACE TABS & PREVIEW TABLES -->
+    <section class="workspace-card">
+      <div class="tabs-bar">
+        <div class="tabs-group">
+          <button type="button" id="tabBtnCourses" class="tab-btn active" onclick="switchTab('courses')">
+            Internal Course Sheets
+            <span id="badgeCourseCount" class="tab-count">0</span>
+          </button>
+          <button type="button" id="tabBtnApc" class="tab-btn" onclick="switchTab('apc')">
+            APC Attendance Sheets
+            <span id="badgeApcCount" class="tab-count">0</span>
+          </button>
+          <button type="button" id="tabBtnStudents" class="tab-btn" onclick="switchTab('students')">
+            Student Audit Lookup
+            <span id="badgeStudentCount" class="tab-count">0</span>
+          </button>
+        </div>
+
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          2-Pass Double Verification &amp; Hash-Sanitization Audit
+          <input type="text" id="searchInput" placeholder="Search course, programme, or student..." oninput="renderActiveTab()" />
         </div>
       </div>
-      <div id="auditBanner" class="audit-banner audit-pass"></div>
-      <div id="auditList" class="audit-list"></div>
-    </section>
 
-    <!-- Interactive Data Explorer & Sheet Preview -->
-    <section id="explorerSection" class="card hidden">
-      <div class="tabs">
-        <button type="button" class="tab-btn active" data-tab="internal">Internal Course Sheets (<span id="tabCountInternal">0</span>)</button>
-        <button type="button" class="tab-btn" data-tab="apc">APC Attendance Sheets (<span id="tabCountApc">0</span>)</button>
-        <button type="button" class="tab-btn" data-tab="students">Student Audit Lookup (<span id="tabCountStudents">0</span>)</button>
+      <!-- TAB 1: INTERNAL COURSE SHEETS -->
+      <div id="panelCourses" class="table-wrap">
+        <div class="empty-state">
+          <h4>No PDFs Uploaded Yet</h4>
+          <p>Upload one or more University of Calicut Exam Registration Report PDFs above to inspect extracted courses and generate Excel sheets.</p>
+        </div>
       </div>
 
-      <div style="margin-bottom: 12px; display: flex; gap: 10px; align-items: center;">
-        <input type="text" id="searchInput" placeholder="Search by course code, course title, programme, register number, or student name..." style="max-width: 460px;" />
-      </div>
+      <!-- TAB 2: APC ATTENDANCE SHEETS -->
+      <div id="panelApc" class="table-wrap hidden"></div>
 
-      <!-- Tab 1: Internal Course Sheets -->
-      <div id="panelInternal" class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Sheet / Course Code</th>
-              <th>Course Title (Click to Edit)</th>
-              <th>Programmes</th>
-              <th>Students</th>
-              <th>Open Ended</th>
-              <th>Preview</th>
-            </tr>
-          </thead>
-          <tbody id="tbodyInternal"></tbody>
-        </table>
-      </div>
-
-      <!-- Tab 2: APC Attendance Sheets -->
-      <div id="panelApc" class="table-wrap hidden">
-        <table>
-          <thead>
-            <tr>
-              <th>Sheet Name</th>
-              <th>Programme Header (Row 4)</th>
-              <th>Register Range</th>
-              <th>Students</th>
-              <th>Working Days</th>
-              <th>Preview</th>
-            </tr>
-          </thead>
-          <tbody id="tbodyApc"></tbody>
-        </table>
-      </div>
-
-      <!-- Tab 3: Student Audit Lookup -->
-      <div id="panelStudents" class="table-wrap hidden">
-        <table>
-          <thead>
-            <tr>
-              <th>Reg. No.</th>
-              <th>Student Name</th>
-              <th>Programme</th>
-              <th>Registered Courses</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="tbodyStudents"></tbody>
-        </table>
-      </div>
+      <!-- TAB 3: STUDENT AUDIT LOOKUP -->
+      <div id="panelStudents" class="table-wrap hidden"></div>
     </section>
 
   </main>
 
-  <!-- Preview Modal -->
-  <div id="previewModal" class="modal-backdrop">
-    <div class="modal-box">
+  <!-- LIVE SHEET PREVIEW MODAL -->
+  <div id="previewModal" class="modal-backdrop hidden" onclick="closePreviewModal(event)">
+    <div class="modal-box" onclick="event.stopPropagation()">
       <div class="modal-head">
-        <strong id="modalTitle" style="font-size: 15px;">Sheet Preview</strong>
-        <button type="button" id="btnCloseModal" class="btn btn-outline btn-sm">Close</button>
+        <div>
+          <h3 id="modalTitle">Sheet Preview</h3>
+          <div id="modalSubtitle" style="font-size: 0.76rem; color: var(--text-muted); margin-top: 2px;"></div>
+        </div>
+        <button type="button" class="btn-icon-sm" onclick="closePreviewModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          Close Preview
+        </button>
       </div>
-      <div id="modalBody" class="modal-body"></div>
+      <div class="modal-body">
+        <div id="modalPaper" class="excel-paper"></div>
+      </div>
     </div>
   </div>
 
+  <!-- TOAST MESSAGE -->
+  <div id="toastBox" class="toast hidden"></div>
+
   <script>
-    // Configure PDF.js worker
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    /* ==========================================================================
+       INITIALIZE PDF.JS WORKER & GLOBAL STATE
+       ========================================================================== */
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     }
 
-    // Global State
     const state = {
-      filesAudit: [],
-      programmes: {}, // key: programmeRaw -> { sheetName, progHeader, students: [{regNo, name, dob, courses}], pdfCount, challanAmount }
-      courses: {},    // key: courseCode -> { code, title, programmes: Set, students: [{regNo, name}], openEnded: 5|10 }
-      allStudents: [],
-      examName: ''
+      uploadedFiles: [], // { id, fileName, numPages, programmeFull, programmeShort, examName, students: [], issues: [] }
+      coursesMap: new Map(), // courseCode -> { code, title, category, openEndedMax, programmes: Set, students: [] }
+      allStudents: [], // flat array of all students across all uploaded PDFs
+      activeTab: 'courses',
+      editingCourseCode: null,
+      editingProgrammeId: null,
+      verification: {
+        passed: true,
+        issues: [],
+        totalPdfs: 0,
+        totalStudents: 0,
+        totalCourses: 0,
+        totalEnrollments: 0
+      }
     };
 
-    // DOM Elements
-    const dropZone = document.getElementById('dropZone');
-    const pdfInput = document.getElementById('pdfInput');
-    const btnReset = document.getElementById('btnReset');
-    const collegeNameInput = document.getElementById('collegeNameInput');
-    const examNameInput = document.getElementById('examNameInput');
-    const workingDaysInput = document.getElementById('workingDaysInput');
-    const internalFileInput = document.getElementById('internalFileInput');
-    const apcFileInput = document.getElementById('apcFileInput');
-    const chkInternalFormula = document.getElementById('chkInternalFormula');
-    const chkApcFormula = document.getElementById('chkApcFormula');
-    const chkAuditSheet = document.getElementById('chkAuditSheet');
-    const btnDownloadInternal = document.getElementById('btnDownloadInternal');
-    const btnDownloadApc = document.getElementById('btnDownloadApc');
-    const statusText = document.getElementById('statusText');
-
-    // Drag & Drop handlers
-    dropZone.addEventListener('click', () => pdfInput.click());
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('dragover');
-    });
-    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('dragover');
-      if (e.dataTransfer.files && e.dataTransfer.files.length) {
-        handleFiles(Array.from(e.dataTransfer.files));
-      }
-    });
-    pdfInput.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files.length) {
-        handleFiles(Array.from(e.target.files));
-      }
-    });
-
-    btnReset.addEventListener('click', () => {
-      state.filesAudit = [];
-      state.programmes = {};
-      state.courses = {};
-      state.allStudents = [];
-      state.examName = '';
-      pdfInput.value = '';
-      examNameInput.value = '';
-      btnReset.classList.add('hidden');
-      btnDownloadInternal.disabled = true;
-      btnDownloadApc.disabled = true;
-      document.getElementById('statsSection').classList.add('hidden');
-      document.getElementById('auditSection').classList.add('hidden');
-      document.getElementById('explorerSection').classList.add('hidden');
-      statusText.textContent = 'No PDF files loaded yet. Upload PDFs to generate sheets.';
-    });
-
-    // Tabs switching
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const tab = btn.dataset.tab;
-        document.getElementById('panelInternal').classList.toggle('hidden', tab !== 'internal');
-        document.getElementById('panelApc').classList.toggle('hidden', tab !== 'apc');
-        document.getElementById('panelStudents').classList.toggle('hidden', tab !== 'students');
-      });
-    });
-
-    document.getElementById('searchInput').addEventListener('input', renderTables);
-    document.getElementById('btnCloseModal').addEventListener('click', () => {
-      document.getElementById('previewModal').classList.remove('open');
-    });
-    document.getElementById('previewModal').addEventListener('click', (e) => {
-      if (e.target.id === 'previewModal') {
-        document.getElementById('previewModal').classList.remove('open');
-      }
-    });
-
-    // Helper: Normalize Course Code
-    function normalizeCode(raw) {
-      return raw.replace(/\s+/g, '').trim();
+    /* ==========================================================================
+       UI HELPERS: TOAST, DRAG-AND-DROP, TABS
+       ========================================================================== */
+    let toastTimer = null;
+    function showToast(msg) {
+      const box = document.getElementById('toastBox');
+      box.textContent = msg;
+      box.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => box.classList.add('hidden'), 3600);
     }
 
-    // Helper: 3-Layer Sanitizer for Course Title (Removes MD5 hex hashes, watermarks, fee text)
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Drag & Drop Listeners
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('pdfFileInput');
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFilesSelected(e.dataTransfer.files);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFilesSelected(e.target.files);
+        e.target.value = '';
+      }
+    });
+
+    function switchTab(tabName) {
+      state.activeTab = tabName;
+      document.getElementById('tabBtnCourses').classList.toggle('active', tabName === 'courses');
+      document.getElementById('tabBtnApc').classList.toggle('active', tabName === 'apc');
+      document.getElementById('tabBtnStudents').classList.toggle('active', tabName === 'students');
+
+      document.getElementById('panelCourses').classList.toggle('hidden', tabName !== 'courses');
+      document.getElementById('panelApc').classList.toggle('hidden', tabName !== 'apc');
+      document.getElementById('panelStudents').classList.toggle('hidden', tabName !== 'students');
+
+      renderActiveTab();
+    }
+
+    /* ==========================================================================
+       3-LAYER HASH SANITIZER & CUFYUGP 2024 COURSE CLASSIFIER
+       ========================================================================== */
     function sanitizeCourseTitle(raw) {
       if (!raw) return '';
-      let t = raw;
-      // Cut off at any 20+ hex hash, Concession, Exam fee, Downloaded on, or University watermark
-      t = t.replace(/\b[0-9a-f]{20,64}\b[\s\S]*/gi, '');
-      t = t.replace(/(?:Concession opted|Exam fee|Fee demand|Fee collected|Downloaded on:|Page \d+ of \d+)[\s\S]*/gi, '');
-      t = t.replace(/(?:UN)?IVERSITY OF CALICUT/gi, '');
+      let text = String(raw);
+
+      // Layer 2A: Strip any 20+ character hexadecimal MD5 hash and everything after it on that segment
+      text = text.replace(/\b[0-9a-f]{20,64}\b.*/gi, '');
+
+      // Layer 2B: Strip Calicut University watermark fragments, fee fields, and footer metadata
+      text = text.replace(/\b(UNIVERSITY\s+OF\s+CALICUT|ERSITY\s+OF\s+CALICUT|IVERSITY\s+OF\s+CALICUT|OF\s+CALICUT|CALICUT)\b/gi, '');
+      text = text.replace(/\b(Concession\s+opted|No\s+Concession|Exam\s+fee|Super\s+fine|Fee\s+demand|Fee\s+collected|Fine\s*₹?\d*)\b.*/gi, '');
+      text = text.replace(/Downloaded\s+on\s*:.*$/gi, '');
+      text = text.replace(/Page\s+\d+\s+of\s+\d+.*/gi, '');
+
       // Collapse whitespace and trim stray punctuation
-      t = t.replace(/\s+/g, ' ').trim();
-      return t;
+      text = text.replace(/\s+/g, ' ').trim();
+      text = text.replace(/^[-–—:.,]+|[-–—:.,]+$/g, '').trim();
+      return text;
     }
 
-    // Helper: CUFYUGP Regulations 2024 Open-Ended Marks Rule (Table-15: 4-credit Major/Minor = 10, 3-credit Foundation = 5)
-    function detectOpenEndedMax(code) {
-      const m = code.match(/^[A-Z]{2,4}\d([A-Z]{2})\d{3}/);
-      if (!m) return 10;
-      const cat = m[1];
-      // CJ = Core in Major, EJ = Elective in Major, MN = Minor, VN = Vocational Minor, MJ = Major, DS = DSC, DE = DSE
-      if (['CJ', 'EJ', 'MN', 'VN', 'MJ', 'DS', 'DE'].includes(cat)) return 10;
-      // FA = AEC, FM = MDC, FS = SEC, FV = VAC
-      if (['FA', 'FM', 'FS', 'FV'].includes(cat)) return 5;
-      return 10;
+    function normalizeCourseCode(rawCode) {
+      return String(rawCode || '')
+        .toUpperCase()
+        .replace(/\s+/g, '')
+        .trim();
     }
 
-    // Helper: Short Programme Name for Internal Marks Row 4 (matches FYUGP_2026_ADMISSION.xlsx)
-    function toInternalProgLabel(progRaw) {
-      let p = progRaw.trim();
-      p = p.replace(/\s+AND\s+MASS\s+COMMUNICATION\s+Honours$/i, '');
-      p = p.replace(/\s+LANGUAGE\s+AND\s+LITERATURE\s+Honours$/i, '');
-      if (!/^B\.Com/i.test(p)) {
-        p = p.replace(/\s+Honours$/i, '');
+    function classifyCourseCode(code) {
+      // CUFYUGP 2024 Section 12 Table-12:
+      // CJ = Core in Major, EJ = Elective in Major, MN = Minor, VN = Vocational Minor
+      // FA = Ability Enhancement (AEC), FM = Multi-Disciplinary (MDC), FS = Skill Enhancement (SEC), FV = Value Added (VAC)
+      const match = code.match(/^[A-Z]{2,4}\d([A-Z]{2})\d{3}/);
+      const catCode = match ? match[1] : '';
+
+      switch (catCode) {
+        case 'CJ':
+          return { label: 'Core (Major)', badgeClass: 'cat-major', openEndedMax: 10 };
+        case 'EJ':
+          return { label: 'Elective (Major)', badgeClass: 'cat-major', openEndedMax: 10 };
+        case 'DS':
+        case 'DE':
+          return { label: 'Discipline Specific', badgeClass: 'cat-major', openEndedMax: 10 };
+        case 'MN':
+          return { label: 'Minor', badgeClass: 'cat-minor', openEndedMax: 10 };
+        case 'VN':
+          return { label: 'Vocational Minor', badgeClass: 'cat-minor', openEndedMax: 10 };
+        case 'FA':
+          return { label: 'AEC (Foundation)', badgeClass: 'cat-found', openEndedMax: 5 };
+        case 'FM':
+          return { label: 'MDC (Foundation)', badgeClass: 'cat-found', openEndedMax: 5 };
+        case 'FS':
+          return { label: 'SEC (Foundation)', badgeClass: 'cat-found', openEndedMax: 5 };
+        case 'FV':
+          return { label: 'VAC (Foundation)', badgeClass: 'cat-found', openEndedMax: 5 };
+        default:
+          return { label: catCode || 'Course', badgeClass: 'cat-found', openEndedMax: 10 };
       }
-      return p.trim();
     }
 
-    // Helper: Clean APC Sheet Tab Name (<= 31 chars, valid Excel sheet characters, matches FYUG 2026 Admin.xlsx)
-    function toApcSheetName(progRaw) {
-      let p = progRaw.trim();
-      if (/JOURNALISM AND MASS COMMUNICATION/i.test(p)) p = 'BA JMC Honours';
-      else if (/ENGLISH LANGUAGE AND LITERATURE/i.test(p)) p = 'BA ENGLISH Honours';
-      else if (/POLITICAL SCIENCE Honours/i.test(p)) p = 'BA POLITICAL SCIENCE Hons';
-      // Excel sheet names cannot exceed 31 chars or contain \ / ? * [ ] :
-      p = p.replace(/[\\\/\?\*\[\]:]/g, ' ').replace(/\s+/g, ' ').trim();
-      if (p.length > 31) p = p.slice(0, 31).trim();
+    function toShortProgrammeName(fullProg) {
+      if (!fullProg) return 'Unknown Programme';
+      let p = fullProg.replace(/\s+/g, ' ').trim();
+      // Match reference short forms while keeping other programmes crisp and readable
+      if (/^BA\s+JOURNALISM\s+AND\s+MASS\s+COMMUNICATION\s+Honours$/i.test(p)) {
+        return 'BA JMC Honours';
+      }
+      if (/^BA\s+ENGLISH\s+LANGUAGE\s+AND\s+LITERATURE\s+Honours$/i.test(p)) {
+        return 'BA ENGLISH Honours';
+      }
+      if (/^BA\s+POLITICAL\s+SCIENCE\s+Honours$/i.test(p)) {
+        return 'BA POLITICAL SCIENCE Hons';
+      }
       return p;
     }
 
-    // Extract structured lines from PDF using PDF.js text coordinates
-    async function extractPdfText(file) {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let pagesText = [];
-
-      for (let p = 1; p <= pdf.numPages; p++) {
-        const page = await pdf.getPage(p);
-        const content = await page.getTextContent();
-        // Sort items top-to-bottom (Y desc), then left-to-right (X asc)
-        const items = content.items.map(it => ({
-          str: it.str,
-          x: it.transform[4],
-          y: it.transform[5]
-        }));
-        items.sort((a, b) => {
-          if (Math.abs(b.y - a.y) > 3.5) return b.y - a.y;
-          return a.x - b.x;
-        });
-
-        let lines = [];
-        let currentLine = [];
-        let lastY = null;
-
-        for (const it of items) {
-          if (lastY === null || Math.abs(it.y - lastY) <= 3.5) {
-            currentLine.push(it);
-          } else {
-            lines.push(currentLine.map(c => c.str).join(' '));
-            currentLine = [it];
-          }
-          lastY = it.y;
-        }
-        if (currentLine.length) {
-          lines.push(currentLine.map(c => c.str).join(' '));
-        }
-        pagesText.push(lines.join('\n'));
+    function sanitizeExcelTabName(name, usedNames) {
+      let clean = String(name || 'Sheet')
+        .replace(/[\\\/\?\*\[\]\:]/g, '-')
+        .replace(/\s+/g, ' ')
+        .trim();
+      if (clean.length > 31) {
+        clean = clean.slice(0, 31).trim();
       }
-      return pagesText.join('\n');
+      if (!clean) clean = 'Sheet';
+
+      let candidate = clean;
+      let counter = 2;
+      while (usedNames.has(candidate.toLowerCase())) {
+        const suffix = `_${counter}`;
+        candidate = clean.slice(0, 31 - suffix.length) + suffix;
+        counter++;
+      }
+      usedNames.add(candidate.toLowerCase());
+      return candidate;
     }
 
-    // Parse a single Exam Registration Report PDF
-    function parseRegistrationPdf(fullText, fileName) {
-      const collegeM = fullText.match(/([A-Z0-9\s.,&-]+COLLEGE[^\n]*)/i);
-      const progM = fullText.match(/Programme\s*:\s*([^\n]+)/i);
-      const examM = fullText.match(/Exam\s*:\s*([^\n]+)/i);
-      const challanM = fullText.match(/Total\s+collection\s*₹?\s*(\d+)/i);
+    /* ==========================================================================
+       SPATIAL PDF LINE RECONSTRUCTION & DYNAMIC ANY-SEMESTER PARSER
+       ========================================================================== */
+    async function extractSpatialLinesFromPdf(arrayBuffer) {
+      if (typeof pdfjsLib === 'undefined') {
+        throw new Error('PDF.js library failed to load. Please check your internet connection.');
+      }
 
-      const progRaw = progM ? progM[1].trim() : fileName.replace(/\.pdf$/i, '');
-      const examRaw = examM ? examM[1].trim() : '';
-      const collegeRaw = collegeM ? collegeM[1].trim() : '';
-      const totalCollection = challanM ? parseInt(challanM[1], 10) : null;
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+      const allLines = [];
 
-      // Match each student header: <sl> <REG_NO> - <CAP_ID> - <NAME> D.O.B. : <DD.MM.YYYY>
-      const studentHeaderRe = /(?:^|\n)\s*(\d+)\s+([A-Z0-9]{8,15})\s*-\s*([A-Z0-9]+)\s*-\s*(.+?)\s+D\.O\.B\.\s*:\s*(\d{2}\.\d{2}\.\d{4})/g;
-      const matches = [...fullText.matchAll(studentHeaderRe)];
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+
+        // Group text items by Y coordinate (rounded within 3pt tolerance) so left & right columns stay ordered
+        const rows = [];
+        for (const item of textContent.items) {
+          const str = (item.str || '').trim();
+          if (!str) continue;
+          const x = item.transform[4];
+          const y = item.transform[5];
+
+          let row = rows.find((r) => Math.abs(r.y - y) <= 3.2);
+          if (!row) {
+            row = { y, items: [] };
+            rows.push(row);
+          }
+          row.items.push({ x, str });
+        }
+
+        // Sort top-to-bottom (descending Y in PDF coordinate space)
+        rows.sort((a, b) => b.y - a.y);
+
+        for (const row of rows) {
+          // Sort left-to-right (ascending X)
+          row.items.sort((a, b) => a.x - b.x);
+
+          // Split right-hand fee/payment table column (X > 365pt in Calicut University A4 reports)
+          // so right-column text never contaminates left-column course titles
+          const leftTokens = [];
+          const rightTokens = [];
+          for (const it of row.items) {
+            if (it.x > 370) {
+              rightTokens.push(it.str);
+            } else {
+              leftTokens.push(it.str);
+            }
+          }
+
+          const leftLine = leftTokens.join(' ').replace(/\s+/g, ' ').trim();
+          const rightLine = rightTokens.join(' ').replace(/\s+/g, ' ').trim();
+
+          if (leftLine) allLines.push({ pageNum, col: 'L', text: leftLine });
+          if (rightLine) allLines.push({ pageNum, col: 'R', text: rightLine });
+        }
+      }
+
+      return { numPages: pdf.numPages, lines: allLines };
+    }
+
+    function parseCalicutExamReport(fileName, numPages, lines) {
+      let programmeFull = '';
+      let examName = '';
+      let challanAmount = null;
+      const issues = [];
+
+      // 1. Extract Header Metadata (Programme, Exam, Challan Amount)
+      for (const lineObj of lines) {
+        const t = lineObj.text;
+
+        if (!programmeFull) {
+          const progMatch = t.match(/Programme\s*:\s*(.+)$/i);
+          if (progMatch) {
+            programmeFull = progMatch[1].replace(/\s+/g, ' ').trim();
+          }
+        }
+
+        if (!examName) {
+          const examMatch = t.match(/Exam\s*:\s*(.+)$/i);
+          if (examMatch && /Semester|FYUG|Examination/i.test(examMatch[1])) {
+            examName = examMatch[1].replace(/\s+/g, ' ').trim();
+          }
+        }
+
+        if (challanAmount === null) {
+          const challanMatch = t.match(/\b\d{7,12}\s+SBI\s+ONLINE\s+\d{2}\.\d{2}\.\d{4}\s+(\d+)/i);
+          if (challanMatch) {
+            challanAmount = parseInt(challanMatch[1], 10);
+          }
+        }
+      }
+
+      if (!programmeFull) {
+        programmeFull = fileName.replace(/\.pdf$/i, '').trim();
+        issues.push(`Programme header not explicitly matched in ${fileName}; defaulted to "${programmeFull}".`);
+      }
+
+      // 2. Parse Student Blocks from Left-Column Lines (plus full-width student headers)
+      // Student header pattern: "<SlNo> <RegNo> - <CAPID> - <StudentName>"
+      const studentHeaderRe = /^(\d{1,3})\s+([A-Z]{3,8}\d{3,5})\s*-\s*(CAP\d{2}[A-Z0-9]+)\s*-\s*(.+)$/i;
+
+      // Course line pattern (supports any semester 1..8 and any CUFYUGP 2024 category code):
+      // e.g. "1 Core 1 COM1CJ101 Management Principles and Application"
+      // or   "4 AEC 1 ENG1FA101(3) English Language Skills..."
+      // or   "6 MDC 1 SOC1FM105-1 Women And Society"
+      const courseStartRe = /^(?:(\d)\s+)?(?:Core\s*\d*|Minor\s*\d*|Major\s*\d*|Elective\s*\d*|AEC\s*\d*|MDC\s*\d*|SEC\s*\d*|VAC\s*\d*|DSC\s*\d*|DSE\s*\d*|Internship|Project)?\s*([A-Z]{2,4}\d[A-Z]{2}\d{3}(?:\s*\([A-Za-z0-9]+\)|\s*-\s*\d+)?)\s*(.*)$/i;
 
       const students = [];
-      let serialGaps = [];
-      let expectedSl = 1;
+      let currentStudent = null;
+      let activeCourse = null;
 
-      for (let i = 0; i < matches.length; i++) {
-        const m = matches[i];
-        const slNo = parseInt(m[1], 10);
-        if (slNo !== expectedSl) {
-          serialGaps.push(`Expected #${expectedSl}, found #${slNo}`);
+      function finalizeActiveCourse() {
+        if (currentStudent && activeCourse) {
+          activeCourse.title = sanitizeCourseTitle(activeCourse.title);
+          if (activeCourse.code) {
+            currentStudent.courses.push(activeCourse);
+          }
+          activeCourse = null;
         }
-        expectedSl = slNo + 1;
+      }
 
-        const regNo = m[2].trim();
-        const capId = m[3].trim();
-        const name = m[4].replace(/\s+/g, ' ').trim();
-        const dob = m[5].trim();
-
-        const startIdx = m.index + m[0].length;
-        const endIdx = i + 1 < matches.length ? matches[i + 1].index : fullText.length;
-        let block = fullText.slice(startIdx, endIdx);
-
-        // Layer 1 Defense: Cut block immediately at MD5 hex hash or Concession opted
-        const cutMatch = block.match(/(?:\b[0-9a-f]{24,64}\b|Concession\s+opted)/i);
-        if (cutMatch) {
-          block = block.slice(0, cutMatch.index);
+      function finalizeCurrentStudent() {
+        finalizeActiveCourse();
+        if (currentStudent) {
+          // Deduplicate any repeated course code within the same student
+          const seen = new Set();
+          currentStudent.courses = currentStudent.courses.filter((c) => {
+            if (seen.has(c.code)) return false;
+            seen.add(c.code);
+            return true;
+          });
+          students.push(currentStudent);
+          currentStudent = null;
         }
-        block = block.replace(/Downloaded on:.*?Page \d+ of \d+/gi, '');
+      }
 
-        // Extract courses inside student block
-        const courseStartRe = /(?:^|\n)\s*(\d+)\s+(?:Core|Minor|Major|AEC|MDC|SEC|VAC|DSC|DSE|Multi\s*Disciplinary)\s*\d*\s*([A-Z]{2,4}\d[A-Z]{2}\d{3}(?:\s*\([A-Za-z0-9]+\)|\s*-\s*\d+)?)\s*([\s\S]+?)(?=(?:\n\s*\d+\s+(?:Core|Minor|Major|AEC|MDC|SEC|VAC|DSC|DSE|Multi\s*Disciplinary)|$))/gi;
-        const courseMatches = [...block.matchAll(courseStartRe)];
+      for (const lineObj of lines) {
+        const rawText = lineObj.text;
 
-        const courses = [];
-        for (const cm of courseMatches) {
-          const code = normalizeCode(cm[2]);
-          const title = sanitizeCourseTitle(cm[3]);
-          courses.push({ code, title });
+        // Check for new student header regardless of column X coordinate
+        const sMatch = rawText.match(studentHeaderRe);
+        if (sMatch) {
+          finalizeCurrentStudent();
+          let rawName = sMatch[4]
+            .replace(/D\.?O\.?B\.?\s*:\s*\d{2}\.\d{2}\.\d{4}.*/i, '')
+            .replace(/\b(UNIVERSITY\s+OF\s+CALICUT|OF\s+CALICUT|CALICUT)\b/gi, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          currentStudent = {
+            slNo: parseInt(sMatch[1], 10),
+            regNo: sMatch[2].toUpperCase().trim(),
+            capId: sMatch[3].toUpperCase().trim(),
+            name: rawName,
+            programmeFull,
+            programmeShort: toShortProgrammeName(programmeFull),
+            courses: []
+          };
+          continue;
         }
 
-        students.push({ slNo, regNo, capId, name, dob, courses });
+        if (!currentStudent) continue;
+
+        // Layer 1 Boundary Defense: Stop reading courses for this student as soon as we hit:
+        // - 24 to 64 char hex hash line
+        // - Fee/Concession block
+        // - Page footer
+        if (/^[0-9a-f]{24,64}$/i.test(rawText.replace(/\s+/g, ''))) {
+          finalizeActiveCourse();
+          continue;
+        }
+        if (/^(Concession\s+opted|No\s+Concession|Exam\s+fee|Super\s+fine|Fee\s+demand|Fee\s+collected|Downloaded\s+on:|Page\s+\d+\s+of\s+\d+)/i.test(rawText)) {
+          finalizeActiveCourse();
+          continue;
+        }
+        if (/^D\.?O\.?B\.?\s*:/i.test(rawText)) {
+          continue;
+        }
+
+        // Only parse course rows from the left/main column
+        if (lineObj.col !== 'L') continue;
+
+        // Strip any inline hex hash before testing course line
+        const cleanedLine = rawText.replace(/\b[0-9a-f]{20,64}\b.*/gi, '').trim();
+        if (!cleanedLine) continue;
+
+        const cMatch = cleanedLine.match(courseStartRe);
+        if (cMatch && cMatch[2]) {
+          finalizeActiveCourse();
+          const normCode = normalizeCourseCode(cMatch[2]);
+          const initialTitle = sanitizeCourseTitle(cMatch[3] || '');
+          activeCourse = {
+            code: normCode,
+            title: initialTitle
+          };
+        } else if (activeCourse) {
+          // Multi-line course title continuation (e.g. "English Language Skills for Commerce and" + "Management")
+          const continuation = sanitizeCourseTitle(cleanedLine);
+          if (
+            continuation &&
+            !/^\d+$/.test(continuation) &&
+            !/^List\s+of\s+registered/i.test(continuation) &&
+            !/^Payment\s+details/i.test(continuation)
+          ) {
+            activeCourse.title = sanitizeCourseTitle(`${activeCourse.title} ${continuation}`);
+          }
+        }
+      }
+
+      finalizeCurrentStudent();
+
+      // 3. Pass-1 PDF Integrity Checks
+      // Check serial number sequence 1..N
+      students.forEach((st, idx) => {
+        const expectedSl = idx + 1;
+        if (st.slNo !== expectedSl) {
+          issues.push(`${fileName}: Student ${st.regNo} has Sl. No. ${st.slNo} (expected ${expectedSl}).`);
+        }
+        if (st.courses.length === 0) {
+          issues.push(`${fileName}: Student ${st.regNo} (${st.name}) has 0 courses extracted.`);
+        }
+      });
+
+      // Check Challan Fee reconciliation if standard ₹1020 fee applies
+      if (challanAmount !== null && students.length > 0) {
+        const expectedStandardFee = students.length * 1020;
+        if (challanAmount !== expectedStandardFee) {
+          issues.push(
+            `${fileName}: Challan amount is ₹${challanAmount.toLocaleString()} for ${students.length} students (₹1,020 × ${students.length} = ₹${expectedStandardFee.toLocaleString()} — verify if any student had fee concession).`
+          );
+        }
       }
 
       return {
+        id: 'pdf_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
         fileName,
-        collegeRaw,
-        progRaw,
-        examRaw,
-        totalCollection,
+        numPages,
+        programmeFull,
+        programmeShort: toShortProgrammeName(programmeFull),
+        examName,
+        challanAmount,
         students,
-        serialGaps
+        issues
       };
     }
 
-    // Handle multiple PDF files
-    async function handleFiles(files) {
-      const pdfFiles = files.filter(f => f.name.toLowerCase().endsWith('.pdf'));
-      if (!pdfFiles.length) {
-        alert('Please select valid PDF files.');
+    /* ==========================================================================
+       FILE HANDLING & PASS-2 CROSS-WORKBOOK RECONCILIATION
+       ========================================================================== */
+    async function handleFilesSelected(fileList) {
+      const pdfFiles = Array.from(fileList).filter((f) => f.name.toLowerCase().endsWith('.pdf'));
+      if (pdfFiles.length === 0) {
+        showToast('Please select valid .pdf files.');
         return;
       }
 
-      statusText.textContent = `Reading and verifying ${pdfFiles.length} PDF file(s)...`;
+      showToast(`Parsing ${pdfFiles.length} PDF file(s)...`);
 
       for (const file of pdfFiles) {
         try {
-          const text = await extractPdfText(file);
-          const parsed = parseRegistrationPdf(text, file.name);
+          const arrayBuffer = await file.arrayBuffer();
+          const { numPages, lines } = await extractSpatialLinesFromPdf(arrayBuffer);
+          const parsed = parseCalicutExamReport(file.name, numPages, lines);
 
-          if (!state.examName && parsed.examRaw) {
-            state.examName = parsed.examRaw;
-            examNameInput.value = parsed.examRaw;
+          // Replace if same filename uploaded again, otherwise append
+          const existingIdx = state.uploadedFiles.findIndex((u) => u.fileName === file.name);
+          if (existingIdx >= 0) {
+            state.uploadedFiles[existingIdx] = parsed;
+          } else {
+            state.uploadedFiles.push(parsed);
           }
 
-          // Store file audit record
-          state.filesAudit = state.filesAudit.filter(x => x.fileName !== file.name);
-          state.filesAudit.push(parsed);
+          // Auto-fill Exam Name if still blank
+          const examInput = document.getElementById('examNameInput');
+          if (!examInput.value.trim() && parsed.examName) {
+            examInput.value = parsed.examName;
+            document.getElementById('examAutoTag').classList.remove('hidden');
+          }
         } catch (err) {
-          console.error('Error parsing PDF:', file.name, err);
-          alert(`Failed to parse ${file.name}: ${err.message}`);
+          console.error(err);
+          showToast(`Error parsing ${file.name}: ${err.message}`);
         }
       }
 
       rebuildAggregatedData();
+      renderAllUI();
+      showToast(`Successfully processed ${pdfFiles.length} PDF file(s).`);
     }
 
-    // Rebuild aggregated structures and run 2-Pass Double Verification
+    function removeUploadedFile(id) {
+      state.uploadedFiles = state.uploadedFiles.filter((f) => f.id !== id);
+      rebuildAggregatedData();
+      renderAllUI();
+    }
+
+    function clearAllFiles() {
+      state.uploadedFiles = [];
+      state.coursesMap.clear();
+      state.allStudents = [];
+      document.getElementById('examNameInput').value = '';
+      document.getElementById('examAutoTag').classList.add('hidden');
+      rebuildAggregatedData();
+      renderAllUI();
+      showToast('All uploaded PDFs cleared.');
+    }
+
     function rebuildAggregatedData() {
-      state.programmes = {};
-      state.courses = {};
+      // Preserve any manual edits to OpenEndedMax or Course Title
+      const prevCourses = new Map(state.coursesMap);
+      state.coursesMap.clear();
       state.allStudents = [];
 
-      let totalCourseEnrollments = 0;
+      const verificationIssues = [];
+      let totalPdfEnrollments = 0;
 
-      for (const fileData of state.filesAudit) {
-        const progKey = fileData.progRaw;
-        if (!state.programmes[progKey]) {
-          state.programmes[progKey] = {
-            progRaw: progKey,
-            sheetName: toApcSheetName(progKey),
-            progHeader: progKey,
-            students: []
-          };
-        }
+      for (const pdfObj of state.uploadedFiles) {
+        verificationIssues.push(...pdfObj.issues);
 
-        const internalProgName = toInternalProgLabel(progKey);
+        for (const st of pdfObj.students) {
+          state.allStudents.push(st);
+          totalPdfEnrollments += st.courses.length;
 
-        for (const stu of fileData.students) {
-          // Deduplicate student within programme if same PDF re-uploaded
-          const existingIdx = state.programmes[progKey].students.findIndex(s => s.regNo === stu.regNo);
-          if (existingIdx >= 0) {
-            state.programmes[progKey].students[existingIdx] = stu;
-          } else {
-            state.programmes[progKey].students.push(stu);
-          }
-
-          for (const c of stu.courses) {
-            totalCourseEnrollments++;
-            if (!state.courses[c.code]) {
-              state.courses[c.code] = {
+          for (const c of st.courses) {
+            if (!state.coursesMap.has(c.code)) {
+              const prev = prevCourses.get(c.code);
+              const meta = classifyCourseCode(c.code);
+              state.coursesMap.set(c.code, {
                 code: c.code,
-                title: c.title,
+                title: prev ? prev.title : (c.title || c.code),
+                categoryLabel: meta.label,
+                badgeClass: meta.badgeClass,
+                openEndedMax: prev ? prev.openEndedMax : meta.openEndedMax,
                 programmes: new Set(),
-                students: [],
-                openEnded: detectOpenEndedMax(c.code)
-              };
+                students: []
+              });
             }
-            // Prefer cleaner/longer non-corrupted title if needed
-            if (c.title && (!state.courses[c.code].title || state.courses[c.code].title.length < 3)) {
-              state.courses[c.code].title = c.title;
-            }
-            state.courses[c.code].programmes.add(internalProgName);
 
-            // Prevent duplicate student in same course
-            if (!state.courses[c.code].students.some(s => s.regNo === stu.regNo)) {
-              state.courses[c.code].students.push({ regNo: stu.regNo, name: stu.name });
+            const courseEntry = state.coursesMap.get(c.code);
+            // If current title was shorter/incomplete and new occurrence has a cleaner longer title, upgrade it
+            if (!prevCourses.has(c.code) && c.title && c.title.length > courseEntry.title.length) {
+              courseEntry.title = c.title;
             }
+            courseEntry.programmes.add(st.programmeShort);
+            courseEntry.students.push({
+              regNo: st.regNo,
+              name: st.name,
+              programmeShort: st.programmeShort,
+              programmeFull: st.programmeFull
+            });
           }
         }
       }
 
-      // Sort students by Register Number ascending in every programme and every course
-      for (const progKey of Object.keys(state.programmes)) {
-        state.programmes[progKey].students.sort((a, b) => a.regNo.localeCompare(b.regNo));
-        for (const s of state.programmes[progKey].students) {
-          state.allStudents.push({ ...s, programme: progKey });
-        }
-      }
-      state.allStudents.sort((a, b) => a.regNo.localeCompare(b.regNo));
+      // Sort students ascending by Register Number inside every course and verify zero duplicates / zero hash leaks
+      let totalInternalRows = 0;
+      for (const [code, entry] of state.coursesMap.entries()) {
+        entry.students.sort((a, b) => a.regNo.localeCompare(b.regNo, undefined, { numeric: true }));
 
-      for (const code of Object.keys(state.courses)) {
-        state.courses[code].students.sort((a, b) => a.regNo.localeCompare(b.regNo));
-      }
-
-      // Run 2-Pass Verification Audit
-      runDoubleVerification(totalCourseEnrollments);
-      renderUI(totalCourseEnrollments);
-    }
-
-    function runDoubleVerification(totalCourseEnrollments) {
-      const auditList = document.getElementById('auditList');
-      const auditBanner = document.getElementById('auditBanner');
-      auditList.innerHTML = '';
-
-      let warnings = 0;
-      let sheetTotalEnrollments = 0;
-      let hashLeakCount = 0;
-
-      for (const code of Object.keys(state.courses)) {
-        const c = state.courses[code];
-        sheetTotalEnrollments += c.students.length;
-        if (/[0-9a-f]{20,}/i.test(c.title)) {
-          hashLeakCount++;
-        }
-      }
-
-      // Pass 1: File-level checks
-      for (const f of state.filesAudit) {
-        const expectedFee = f.students.length * 1020;
-        const feeOk = f.totalCollection === null || f.totalCollection === expectedFee;
-        const serialOk = f.serialGaps.length === 0;
-        const courseCountOk = f.students.every(s => s.courses.length >= 1);
-
-        if (!feeOk || !serialOk || !courseCountOk || f.students.length === 0) {
-          warnings++;
-        }
-
-        const item = document.createElement('div');
-        item.className = 'audit-item';
-        item.innerHTML = `
-          <div>
-            <strong>${escapeHtml(f.progRaw)}</strong>
-            <div style="color: var(--text-light); font-size: 11.5px;">
-              ${f.students.length} students • ${f.totalCollection !== null ? 'Challan ₹' + f.totalCollection : 'Challan N/A'}
-              ${!serialOk ? ' • Serial gap!' : ''}
-            </div>
-          </div>
-          <span style="font-weight:700; color: ${(feeOk && serialOk && f.students.length > 0) ? '#047857' : '#b45309'};">
-            ${(feeOk && serialOk && f.students.length > 0) ? '✓ VERIFIED' : '⚠ CHECK'}
-          </span>
-        `;
-        auditList.appendChild(item);
-      }
-
-      // Pass 2: Cross-sheet enrollment & hash sanitization check
-      const enrollmentMatch = totalCourseEnrollments === sheetTotalEnrollments;
-      if (!enrollmentMatch || hashLeakCount > 0) warnings++;
-
-      const pass2Item = document.createElement('div');
-      pass2Item.className = 'audit-item';
-      pass2Item.innerHTML = `
-        <div>
-          <strong>Cross-Sheet Enrollment &amp; Title Audit</strong>
-          <div style="color: var(--text-light); font-size: 11.5px;">
-            PDF Enrollments: ${totalCourseEnrollments} vs Excel Rows: ${sheetTotalEnrollments} • Hash Leaks: ${hashLeakCount}
-          </div>
-        </div>
-        <span style="font-weight:700; color: ${(enrollmentMatch && hashLeakCount === 0) ? '#047857' : '#b91c1c'};">
-          ${(enrollmentMatch && hashLeakCount === 0) ? '✓ 100% MATCH' : '✕ MISMATCH'}
-        </span>
-      `;
-      auditList.appendChild(pass2Item);
-
-      if (warnings === 0) {
-        auditBanner.className = 'audit-banner audit-pass';
-        auditBanner.innerHTML = `<span>✓ DOUBLE VERIFICATION PASSED: All ${state.allStudents.length} students across ${Object.keys(state.programmes).length} programmes and ${Object.keys(state.courses).length} courses verified with 0 errors and 0 hash leaks.</span>`;
-      } else {
-        auditBanner.className = 'audit-banner audit-warn';
-        auditBanner.innerHTML = `<span>⚠ Audit completed with ${warnings} notice(s). Please review items below before downloading.</span>`;
-      }
-    }
-
-    function renderUI(totalCourseEnrollments) {
-      const progCount = Object.keys(state.programmes).length;
-      const stuCount = state.allStudents.length;
-      const courseCount = Object.keys(state.courses).length;
-
-      document.getElementById('statProgrammes').textContent = progCount;
-      document.getElementById('statStudents').textContent = stuCount;
-      document.getElementById('statCourses').textContent = courseCount;
-      document.getElementById('statEnrollments').textContent = totalCourseEnrollments;
-
-      document.getElementById('tabCountInternal').textContent = courseCount;
-      document.getElementById('tabCountApc').textContent = progCount;
-      document.getElementById('tabCountStudents').textContent = stuCount;
-
-      const hasData = stuCount > 0;
-      btnReset.classList.toggle('hidden', !hasData);
-      btnDownloadInternal.disabled = !hasData;
-      btnDownloadApc.disabled = !hasData;
-      document.getElementById('statsSection').classList.toggle('hidden', !hasData);
-      document.getElementById('auditSection').classList.toggle('hidden', !hasData);
-      document.getElementById('explorerSection').classList.toggle('hidden', !hasData);
-
-      statusText.textContent = hasData
-        ? `Ready! Parsed ${stuCount} students across ${progCount} programmes (${courseCount} course sheets).`
-        : 'No PDF files loaded yet.';
-
-      renderTables();
-    }
-
-    function renderTables() {
-      const q = document.getElementById('searchInput').value.trim().toLowerCase();
-
-      // 1. Internal Course Sheets Table
-      const tbodyInternal = document.getElementById('tbodyInternal');
-      tbodyInternal.innerHTML = '';
-      const sortedCodes = Object.keys(state.courses).sort();
-
-      for (const code of sortedCodes) {
-        const c = state.courses[code];
-        const progsStr = Array.from(c.programmes).sort().join(', ');
-        if (q && !code.toLowerCase().includes(q) && !c.title.toLowerCase().includes(q) && !progsStr.toLowerCase().includes(q)) {
-          continue;
-        }
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><span class="code-badge">${escapeHtml(code)}</span></td>
-          <td>
-            <span class="editable-title" data-code="${escapeHtml(code)}" title="Click to edit title" style="cursor:pointer; border-bottom: 1px dashed #94a3b8;">
-              ${escapeHtml(c.title)}
-            </span>
-          </td>
-          <td style="font-size: 12px; color: var(--text-muted);">${escapeHtml(progsStr)}</td>
-          <td><strong>${c.students.length}</strong></td>
-          <td>
-            <span class="pill-oe ${c.openEnded === 10 ? 'oe-10' : 'oe-5'}" data-code="${escapeHtml(code)}" title="Click to toggle (5) / (10)">
-              Open ended (${c.openEnded})
-            </span>
-          </td>
-          <td>
-            <button type="button" class="btn btn-outline btn-sm btn-preview-internal" data-code="${escapeHtml(code)}">Preview</button>
-          </td>
-        `;
-        tbodyInternal.appendChild(tr);
-      }
-
-      // Bind inline title edit & Open-ended toggle
-      tbodyInternal.querySelectorAll('.editable-title').forEach(el => {
-        el.addEventListener('click', () => {
-          const code = el.dataset.code;
-          const current = state.courses[code].title;
-          const updated = prompt(`Edit Course Title for ${code}:`, current);
-          if (updated !== null && updated.trim()) {
-            state.courses[code].title = sanitizeCourseTitle(updated);
-            renderTables();
+        const regSeen = new Set();
+        for (const s of entry.students) {
+          if (regSeen.has(s.regNo)) {
+            verificationIssues.push(`Duplicate Register Number ${s.regNo} detected inside course ${code}.`);
           }
-        });
-      });
-
-      tbodyInternal.querySelectorAll('.pill-oe').forEach(el => {
-        el.addEventListener('click', () => {
-          const code = el.dataset.code;
-          state.courses[code].openEnded = state.courses[code].openEnded === 10 ? 5 : 10;
-          renderTables();
-        });
-      });
-
-      tbodyInternal.querySelectorAll('.btn-preview-internal').forEach(btn => {
-        btn.addEventListener('click', () => openInternalPreview(btn.dataset.code));
-      });
-
-      // 2. APC Attendance Sheets Table
-      const tbodyApc = document.getElementById('tbodyApc');
-      tbodyApc.innerHTML = '';
-      const workingDays = parseInt(workingDaysInput.value, 10) || 90;
-
-      for (const progKey of Object.keys(state.programmes).sort()) {
-        const p = state.programmes[progKey];
-        if (q && !p.sheetName.toLowerCase().includes(q) && !p.progHeader.toLowerCase().includes(q)) {
-          continue;
+          regSeen.add(s.regNo);
         }
-        const firstReg = p.students[0]?.regNo || '-';
-        const lastReg = p.students[p.students.length - 1]?.regNo || '-';
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${escapeHtml(p.sheetName)}</strong></td>
-          <td>${escapeHtml(p.progHeader)}</td>
-          <td><span class="code-badge">${escapeHtml(firstReg)}</span> – <span class="code-badge">${escapeHtml(lastReg)}</span></td>
-          <td><strong>${p.students.length}</strong></td>
-          <td>${workingDays} days</td>
-          <td>
-            <button type="button" class="btn btn-outline btn-sm btn-preview-apc" data-prog="${escapeHtml(progKey)}">Preview</button>
-          </td>
-        `;
-        tbodyApc.appendChild(tr);
+        if (/\b[0-9a-f]{16,}\b/i.test(entry.title)) {
+          verificationIssues.push(`Potential hex string detected in course title for ${code}: "${entry.title}"`);
+        }
+
+        totalInternalRows += entry.students.length;
       }
 
-      tbodyApc.querySelectorAll('.btn-preview-apc').forEach(btn => {
-        btn.addEventListener('click', () => openApcPreview(btn.dataset.prog));
-      });
+      // Sort allStudents ascending by Register Number
+      state.allStudents.sort((a, b) => a.regNo.localeCompare(b.regNo, undefined, { numeric: true }));
 
-      // 3. Student Lookup Table
-      const tbodyStudents = document.getElementById('tbodyStudents');
-      tbodyStudents.innerHTML = '';
-      for (const s of state.allStudents) {
-        const codesStr = s.courses.map(c => c.code).join(', ');
-        if (q && !s.regNo.toLowerCase().includes(q) && !s.name.toLowerCase().includes(q) && !s.programme.toLowerCase().includes(q) && !codesStr.toLowerCase().includes(q)) {
-          continue;
-        }
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><span class="code-badge">${escapeHtml(s.regNo)}</span></td>
-          <td><strong>${escapeHtml(s.name)}</strong></td>
-          <td style="font-size: 12px;">${escapeHtml(s.programme)}</td>
-          <td style="font-size: 12px; font-family: monospace;">${escapeHtml(codesStr)}</td>
-          <td><span style="color: #047857; font-weight: 700; font-size: 12px;">✓ ${s.courses.length} papers</span></td>
-        `;
-        tbodyStudents.appendChild(tr);
+      // Cross-workbook enrollment count check
+      if (totalPdfEnrollments !== totalInternalRows) {
+        verificationIssues.push(
+          `Enrollment reconciliation mismatch: PDFs contain ${totalPdfEnrollments} enrollments, Internal sheets contain ${totalInternalRows}.`
+        );
       }
+
+      state.verification = {
+        passed: verificationIssues.length === 0,
+        issues: verificationIssues,
+        totalPdfs: state.uploadedFiles.length,
+        totalStudents: state.allStudents.length,
+        totalCourses: state.coursesMap.size,
+        totalEnrollments: totalInternalRows
+      };
     }
 
-    // Preview Modal: Internal Marks Sheet
-    function openInternalPreview(code) {
-      const c = state.courses[code];
-      if (!c) return;
-      const college = collegeNameInput.value.trim() || 'MIC ARTS AND SCIENCE COLLEGE ,ATHANIKAL,VALLUVAMBRAM';
-      const exam = examNameInput.value.trim() || state.examName || 'First Semester FYUG Examination November 2026';
-      const progsStr = Array.from(c.programmes).sort().join(', ');
-
-      document.getElementById('modalTitle').textContent = `Internal Marks Sheet Preview — ${code} (${c.students.length} Students)`;
-      let rowsHtml = c.students.map((s, idx) => `
-        <tr>
-          <td style="text-align:center;">${idx + 1}</td>
-          <td style="text-align:center;">${escapeHtml(s.regNo)}</td>
-          <td>${escapeHtml(s.name)}</td>
-          <td></td><td></td><td></td><td></td><td></td>
-        </tr>
-      `).join('');
-
-      document.getElementById('modalBody').innerHTML = `
-        <div class="excel-sim-sheet">
-          <div class="excel-sim-header" style="font-size:15px;">${escapeHtml(college)}</div>
-          <div class="excel-sim-header" style="font-size:13.5px;">Internal Marks Report - ${escapeHtml(c.title)} (${escapeHtml(code)})</div>
-          <div class="excel-sim-header" style="font-size:13.5px;">Exam : ${escapeHtml(exam)}</div>
-          <div class="excel-sim-header" style="font-size:13.5px; margin-bottom:8px;">Programme : ${escapeHtml(progsStr)}</div>
-          <table class="excel-sim-table">
-            <thead>
-              <tr>
-                <th style="width:45px;">Sl. No.</th>
-                <th style="width:125px;">Register Number</th>
-                <th>Name of the Student</th>
-                <th style="width:95px;">Test Paper /<br>Mid-Sem Exam<br>(10)</th>
-                <th style="width:85px;">Seminar /<br>Viva / Quiz<br>(6)</th>
-                <th style="width:85px;">Assignment<br>(4)</th>
-                <th style="width:90px;">Total Internal<br>Marks<br>(20)</th>
-                <th style="width:95px;">Internal Open<br>ended<br>(${c.openEnded})</th>
-              </tr>
-            </thead>
-            <tbody>${rowsHtml}</tbody>
-          </table>
-          <div style="display:flex; justify-content:space-between; margin-top:36px; font-weight:bold; font-size:13px;">
-            <span>Concerned Teacher</span>
-            <span>HoD</span>
-            <span>Principal</span>
-          </div>
-        </div>
-      `;
-      document.getElementById('previewModal').classList.add('open');
+    /* ==========================================================================
+       RENDERING UI COMPONENTS
+       ========================================================================== */
+    function renderAllUI() {
+      renderUploadedFilesList();
+      renderVerificationBanner();
+      updateBadgesAndButtons();
+      renderActiveTab();
     }
 
-    // Preview Modal: APC Consolidated Attendance Sheet (Matches FYUG 2026 Admin.xlsx + Cambria)
-    function openApcPreview(progKey) {
-      const p = state.programmes[progKey];
-      if (!p) return;
-      const college = collegeNameInput.value.trim() || 'MIC ARTS AND SCIENCE COLLEGE, ATHANIKAL, VALLUVAMBRAM';
-      const exam = examNameInput.value.trim() || state.examName || 'First Semester FYUG Examination November 2026';
-      const workingDays = parseInt(workingDaysInput.value, 10) || 90;
+    function renderUploadedFilesList() {
+      const listEl = document.getElementById('uploadedFilesList');
+      const clearBtn = document.getElementById('btnClearAll');
 
-      document.getElementById('modalTitle').textContent = `APC Sheet Preview — ${p.sheetName} (${p.students.length} Students)`;
-      let rowsHtml = p.students.map((s, idx) => `
-        <tr>
-          <td style="text-align:center;">${idx + 1}</td>
-          <td style="text-align:left;">${escapeHtml(s.regNo)}</td>
-          <td>${escapeHtml(s.name)}</td>
-          <td></td><td></td><td></td>
-        </tr>
-      `).join('');
-
-      document.getElementById('modalBody').innerHTML = `
-        <div class="excel-sim-sheet">
-          <div style="text-align:center; font-weight:bold; font-size:14.5px; margin-bottom:2px;">${escapeHtml(college)}</div>
-          <div style="text-align:center; font-weight:bold; font-size:13.5px; margin-bottom:8px;">Consolidated Attendance Percentage Report</div>
-          <table class="excel-sim-meta">
-            <tr><td style="width:170px;">Exam:</td><td>${escapeHtml(exam)}</td></tr>
-            <tr><td>Programme:</td><td>${escapeHtml(p.progHeader)}</td></tr>
-            <tr><td>Total Working Days:</td><td>${workingDays}</td></tr>
-          </table>
-          <table class="excel-sim-table">
-            <thead>
-              <tr>
-                <th style="width:45px;">#</th>
-                <th style="width:140px;">Register Number</th>
-                <th>Name of the Student</th>
-                <th style="width:95px;">Total<br>Present</th>
-                <th style="width:100px;">Percentage<br>(%)</th>
-                <th style="width:155px;">Condonation Details</th>
-              </tr>
-            </thead>
-            <tbody>${rowsHtml}</tbody>
-          </table>
-          <div style="display:flex; justify-content:space-between; margin-top:36px; font-weight:bold; font-size:13px;">
-            <span style="margin-left:40px;">Signature of the Class Teacher</span>
-            <span>Signature of the HoD</span>
-            <span>Signature of the Principal</span>
-          </div>
-        </div>
-      `;
-      document.getElementById('previewModal').classList.add('open');
-    }
-
-    // =========================================================================
-    // EXCEL GENERATION 1: INTERNAL MARKS REPORT (FYUGP_2026_ADMISSION.xlsx format)
-    // =========================================================================
-    btnDownloadInternal.addEventListener('click', async () => {
-      if (!window.ExcelJS) {
-        alert('ExcelJS library is still loading. Please try again in a moment.');
+      if (state.uploadedFiles.length === 0) {
+        listEl.innerHTML = '';
+        clearBtn.classList.add('hidden');
         return;
       }
-      const wb = new ExcelJS.Workbook();
-      const college = collegeNameInput.value.trim() || 'MIC ARTS AND SCIENCE COLLEGE ,ATHANIKAL,VALLUVAMBRAM';
-      const exam = examNameInput.value.trim() || state.examName || 'First Semester FYUG Examination November 2026';
-      const useFormula = chkInternalFormula.checked;
+
+      clearBtn.classList.remove('hidden');
+      listEl.innerHTML = state.uploadedFiles
+        .map(
+          (f) => `
+          <div class="file-pill">
+            <div class="file-pill-info">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              <div style="min-width:0;">
+                <div class="file-pill-name" title="${escapeHtml(f.fileName)}">${escapeHtml(f.fileName)}</div>
+                <div class="file-pill-meta">
+                  ${escapeHtml(f.programmeFull)} &bull; <strong>${f.students.length}</strong> students &bull; ${f.numPages} page(s)
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn-remove-file" title="Remove PDF" onclick="removeUploadedFile('${f.id}')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        `
+        )
+        .join('');
+    }
+
+    function renderVerificationBanner() {
+      const banner = document.getElementById('verificationBanner');
+      const v = state.verification;
+
+      if (v.totalPdfs === 0) {
+        banner.classList.add('hidden');
+        return;
+      }
+
+      banner.classList.remove('hidden');
+      banner.className = `verify-banner ${v.passed ? 'ok' : 'warn'}`;
+
+      const iconSvg = v.passed
+        ? `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`
+        : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+
+      const statusText = v.passed
+        ? 'DOUBLE VERIFIED • 0 ERRORS (100% Student & Course Reconciliation Passed)'
+        : `DOUBLE VERIFICATION NOTICE • ${v.issues.length} Item(s) Flagged for Review`;
+
+      const issuesHtml = v.issues.length
+        ? `<ul class="verify-issues-list">${v.issues.map((i) => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`
+        : '';
+
+      banner.innerHTML = `
+        <div class="verify-header">
+          <div class="verify-title">${iconSvg} <span>${statusText}</span></div>
+          <div class="verify-stats">
+            <span class="stat-chip">Programmes: ${v.totalPdfs}</span>
+            <span class="stat-chip">Total Students: ${v.totalStudents}</span>
+            <span class="stat-chip">Course Sheets: ${v.totalCourses}</span>
+            <span class="stat-chip">Verified Enrollments: ${v.totalEnrollments}</span>
+          </div>
+        </div>
+        ${issuesHtml}
+      `;
+    }
+
+    function updateBadgesAndButtons() {
+      const hasData = state.uploadedFiles.length > 0;
+      document.getElementById('btnDownloadInternal').disabled = !hasData;
+      document.getElementById('btnDownloadApc').disabled = !hasData;
+
+      document.getElementById('badgeCourseCount').textContent = state.coursesMap.size;
+      document.getElementById('badgeApcCount').textContent = state.uploadedFiles.length;
+      document.getElementById('badgeStudentCount').textContent = state.allStudents.length;
+    }
+
+    function renderActiveTab() {
+      const query = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+      if (state.activeTab === 'courses') {
+        renderCoursesTable(query);
+      } else if (state.activeTab === 'apc') {
+        renderApcTable(query);
+      } else {
+        renderStudentsTable(query);
+      }
+    }
+
+    function renderCoursesTable(query) {
+      const container = document.getElementById('panelCourses');
+      if (state.coursesMap.size === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h4>No PDFs Uploaded Yet</h4>
+            <p>Upload one or more University of Calicut Exam Registration Report PDFs above to inspect extracted courses and generate Excel sheets.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const sortedCourses = Array.from(state.coursesMap.values()).sort((a, b) =>
+        a.code.localeCompare(b.code)
+      );
+
+      const filtered = sortedCourses.filter((c) => {
+        if (!query) return true;
+        const progs = Array.from(c.programmes).join(' ').toLowerCase();
+        return (
+          c.code.toLowerCase().includes(query) ||
+          c.title.toLowerCase().includes(query) ||
+          progs.includes(query)
+        );
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-state"><h4>No matching courses found</h4></div>`;
+        return;
+      }
+
+      const rowsHtml = filtered
+        .map((c, idx) => {
+          const progsText = Array.from(c.programmes).sort().join(', ');
+          const isEditing = state.editingCourseCode === c.code;
+
+          const titleCell = isEditing
+            ? `<div class="inline-edit-wrap">
+                 <input type="text" id="editTitleInput_${escapeHtml(c.code)}" class="inline-edit-input" value="${escapeHtml(c.title)}" />
+                 <button type="button" class="btn-icon-sm" onclick="saveCourseTitle('${escapeHtml(c.code)}')">Save</button>
+                 <button type="button" class="btn-icon-sm" onclick="cancelEditCourseTitle()">Cancel</button>
+               </div>`
+            : `<div style="display:flex; align-items:center; gap:8px;">
+                 <span style="font-weight:600; color:var(--text-primary);">${escapeHtml(c.title)}</span>
+                 <button type="button" class="btn-icon-sm" title="Edit Course Title" onclick="startEditCourseTitle('${escapeHtml(c.code)}')">
+                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                   </svg>
+                 </button>
+               </div>`;
+
+          return `
+            <tr>
+              <td>${idx + 1}</td>
+              <td><span class="code-badge">${escapeHtml(c.code)}</span></td>
+              <td>${titleCell}</td>
+              <td><span class="cat-badge ${c.badgeClass}">${escapeHtml(c.categoryLabel)}</span></td>
+              <td style="max-width:260px; color:var(--text-secondary); font-size:0.78rem;">${escapeHtml(progsText)}</td>
+              <td style="font-weight:800;">${c.students.length}</td>
+              <td>
+                <button type="button" class="oe-toggle-btn ${c.openEndedMax === 10 ? 'oe-10' : 'oe-5'}"
+                        title="Click to toggle Open Ended Max Marks between 10 and 5"
+                        onclick="toggleOpenEnded('${escapeHtml(c.code)}')">
+                  Open Ended (${c.openEndedMax})
+                </button>
+              </td>
+              <td>
+                <button type="button" class="btn-icon-sm" onclick="openCoursePreview('${escapeHtml(c.code)}')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  Preview Sheet
+                </button>
+              </td>
+            </tr>
+          `;
+        })
+        .join('');
+
+      container.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Sheet / Course Code</th>
+              <th>Course Title</th>
+              <th>Category</th>
+              <th>Enrolled Programmes</th>
+              <th>Students</th>
+              <th>Open Ended Max</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    function toggleOpenEnded(code) {
+      const entry = state.coursesMap.get(code);
+      if (!entry) return;
+      entry.openEndedMax = entry.openEndedMax === 10 ? 5 : 10;
+      renderActiveTab();
+      showToast(`Updated ${code} Open Ended marks to (${entry.openEndedMax}).`);
+    }
+
+    function startEditCourseTitle(code) {
+      state.editingCourseCode = code;
+      renderActiveTab();
+    }
+
+    function cancelEditCourseTitle() {
+      state.editingCourseCode = null;
+      renderActiveTab();
+    }
+
+    function saveCourseTitle(code) {
+      const inp = document.getElementById(`editTitleInput_${code}`);
+      if (!inp) return;
+      const newTitle = sanitizeCourseTitle(inp.value);
+      if (newTitle && state.coursesMap.has(code)) {
+        state.coursesMap.get(code).title = newTitle;
+      }
+      state.editingCourseCode = null;
+      rebuildAggregatedData();
+      renderAllUI();
+      showToast(`Updated course title for ${code}.`);
+    }
+
+    function renderApcTable(query) {
+      const container = document.getElementById('panelApc');
+      if (state.uploadedFiles.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h4>No Programmes Loaded</h4>
+            <p>Upload Exam Registration PDFs above to preview Programme-wise APC Attendance sheets.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const workingDays = parseInt(document.getElementById('workingDaysInput').value, 10) || 90;
+      const filtered = state.uploadedFiles.filter((f) => {
+        if (!query) return true;
+        return (
+          f.programmeFull.toLowerCase().includes(query) ||
+          f.programmeShort.toLowerCase().includes(query) ||
+          f.fileName.toLowerCase().includes(query)
+        );
+      });
+
+      const rowsHtml = filtered
+        .map((f, idx) => {
+          const isEditing = state.editingProgrammeId === f.id;
+          const progCell = isEditing
+            ? `<div class="inline-edit-wrap">
+                 <input type="text" id="editProgInput_${f.id}" class="inline-edit-input" value="${escapeHtml(f.programmeFull)}" />
+                 <button type="button" class="btn-icon-sm" onclick="saveProgrammeName('${f.id}')">Save</button>
+                 <button type="button" class="btn-icon-sm" onclick="cancelEditProgramme()">Cancel</button>
+               </div>`
+            : `<div style="display:flex; align-items:center; gap:8px;">
+                 <span style="font-weight:700;">${escapeHtml(f.programmeFull)}</span>
+                 <button type="button" class="btn-icon-sm" title="Edit Programme Name" onclick="startEditProgramme('${f.id}')">
+                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                   </svg>
+                 </button>
+               </div>`;
+
+          return `
+            <tr>
+              <td>${idx + 1}</td>
+              <td><span class="code-badge">${escapeHtml(f.programmeShort)}</span></td>
+              <td>${progCell}</td>
+              <td style="font-weight:800;">${f.students.length}</td>
+              <td>${workingDays} Days</td>
+              <td>
+                <button type="button" class="btn-icon-sm" onclick="openApcPreview('${f.id}')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  Preview Sheet
+                </button>
+              </td>
+            </tr>
+          `;
+        })
+        .join('');
+
+      container.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>APC Tab Name</th>
+              <th>Full Programme Name (Row 4)</th>
+              <th>Students</th>
+              <th>Working Days</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    function startEditProgramme(id) {
+      state.editingProgrammeId = id;
+      renderActiveTab();
+    }
+
+    function cancelEditProgramme() {
+      state.editingProgrammeId = null;
+      renderActiveTab();
+    }
+
+    function saveProgrammeName(id) {
+      const inp = document.getElementById(`editProgInput_${id}`);
+      const fileObj = state.uploadedFiles.find((f) => f.id === id);
+      if (inp && fileObj && inp.value.trim()) {
+        const updated = inp.value.trim();
+        fileObj.programmeFull = updated;
+        fileObj.programmeShort = toShortProgrammeName(updated);
+        fileObj.students.forEach((s) => {
+          s.programmeFull = updated;
+          s.programmeShort = fileObj.programmeShort;
+        });
+      }
+      state.editingProgrammeId = null;
+      rebuildAggregatedData();
+      renderAllUI();
+      showToast('Programme name updated.');
+    }
+
+    function renderStudentsTable(query) {
+      const container = document.getElementById('panelStudents');
+      if (state.allStudents.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <h4>No Student Records Yet</h4>
+            <p>Upload PDFs to search and audit individual student course registrations.</p>
+          </div>
+        `;
+        return;
+      }
+
+      const filtered = state.allStudents.filter((s) => {
+        if (!query) return true;
+        const cStr = s.courses.map((c) => `${c.code} ${c.title}`).join(' ').toLowerCase();
+        return (
+          s.regNo.toLowerCase().includes(query) ||
+          s.name.toLowerCase().includes(query) ||
+          s.programmeShort.toLowerCase().includes(query) ||
+          cStr.includes(query)
+        );
+      });
+
+      const slice = filtered.slice(0, 150);
+      const rowsHtml = slice
+        .map(
+          (s, idx) => `
+          <tr>
+            <td>${idx + 1}</td>
+            <td><span class="code-badge">${escapeHtml(s.regNo)}</span></td>
+            <td style="font-weight:700;">${escapeHtml(s.name)}</td>
+            <td style="font-size:0.78rem; color:var(--text-secondary);">${escapeHtml(s.programmeShort)}</td>
+            <td>
+              <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                ${s.courses
+                  .map(
+                    (c) =>
+                      `<span title="${escapeHtml(c.title)}" style="background:#f1f5f9; border:1px solid #cbd5e1; padding:2px 6px; border-radius:5px; font-size:0.71rem; font-weight:700;">${escapeHtml(c.code)}</span>`
+                  )
+                  .join('')}
+              </div>
+            </td>
+          </tr>
+        `
+        )
+        .join('');
+
+      const note =
+        filtered.length > 150
+          ? `<div style="padding:10px 16px; font-size:0.76rem; color:var(--text-muted); background:var(--bg-subtle);">Showing first 150 of ${filtered.length} matching students. Use search box to filter.</div>`
+          : '';
+
+      container.innerHTML = `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Register No.</th>
+              <th>Student Name</th>
+              <th>Programme</th>
+              <th>Enrolled Courses (${filtered.length} Students)</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+        ${note}
+      `;
+    }
+
+    /* ==========================================================================
+       LIVE SPREADSHEET PREVIEW MODAL (INTERNAL MARKS & APC ATTENDANCE)
+       ========================================================================== */
+    function openCoursePreview(code) {
+      const entry = state.coursesMap.get(code);
+      if (!entry) return;
+
+      const collegeName = document.getElementById('collegeNameInput').value.trim();
+      const examName = document.getElementById('examNameInput').value.trim() || 'First Semester FYUG Examination November 2026';
+      const progsList = Array.from(entry.programmes).sort().join(', ');
+
+      document.getElementById('modalTitle').textContent = `Internal Marks Sheet Preview — ${entry.code}`;
+      document.getElementById('modalSubtitle').textContent = `${entry.title} (${entry.students.length} Students)`;
+
+      const studentRows = entry.students
+        .map(
+          (st, idx) => `
+          <tr>
+            <td style="text-align:center;">${idx + 1}</td>
+            <td style="text-align:center;">${escapeHtml(st.regNo)}</td>
+            <td style="text-align:left;">${escapeHtml(st.name)}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        `
+        )
+        .join('');
+
+      document.getElementById('modalPaper').innerHTML = `
+        <table class="excel-grid">
+          <tr>
+            <td colspan="8" style="text-align:center; font-weight:bold; font-size:14px;">${escapeHtml(collegeName)}</td>
+          </tr>
+          <tr>
+            <td colspan="8" style="text-align:center; font-size:12px;">Internal Marks Report - ${escapeHtml(entry.title)} (${escapeHtml(entry.code)})</td>
+          </tr>
+          <tr>
+            <td colspan="8" style="text-align:center; font-size:12px;">Exam : ${escapeHtml(examName)}</td>
+          </tr>
+          <tr>
+            <td colspan="8" style="text-align:center; font-size:12px;">Programme : ${escapeHtml(progsList)}</td>
+          </tr>
+          <tr>
+            <td colspan="8" class="no-border" style="height:14px;"></td>
+          </tr>
+          <tr style="font-weight:bold; text-align:center;">
+            <th style="width:45px;">Sl. No.</th>
+            <th style="width:125px;">Register Number</th>
+            <th>Name of the Student</th>
+            <th style="width:82px;">Test Paper /<br/>Mid-Sem Exam<br/>(10)</th>
+            <th style="width:76px;">Seminar /<br/>Viva / Quiz<br/>(6)</th>
+            <th style="width:76px;">Assignment<br/>(4)</th>
+            <th style="width:82px;">Total Internal<br/>Marks<br/>(20)</th>
+            <th style="width:82px;">Internal Open<br/>ended<br/>(${entry.openEndedMax})</th>
+          </tr>
+          ${studentRows}
+          <tr><td colspan="8" class="no-border" style="height:28px;"></td></tr>
+          <tr style="font-weight:bold;">
+            <td class="no-border"></td>
+            <td colspan="2" class="no-border" style="text-align:left;">Concerned Teacher</td>
+            <td colspan="3" class="no-border" style="text-align:center;">HoD</td>
+            <td colspan="2" class="no-border" style="text-align:right;">Principal</td>
+          </tr>
+        </table>
+      `;
+
+      document.getElementById('previewModal').classList.remove('hidden');
+    }
+
+    function openApcPreview(fileId) {
+      const fileObj = state.uploadedFiles.find((f) => f.id === fileId);
+      if (!fileObj) return;
+
+      const collegeName = document.getElementById('collegeNameInput').value.trim();
+      const examName = document.getElementById('examNameInput').value.trim() || fileObj.examName || 'First Semester FYUG Examination November 2026';
+      const workingDays = parseInt(document.getElementById('workingDaysInput').value, 10) || 90;
+
+      const sortedStudents = [...fileObj.students].sort((a, b) =>
+        a.regNo.localeCompare(b.regNo, undefined, { numeric: true })
+      );
+
+      document.getElementById('modalTitle').textContent = `APC Attendance Sheet Preview — ${fileObj.programmeShort}`;
+      document.getElementById('modalSubtitle').textContent = `${fileObj.programmeFull} (${sortedStudents.length} Students)`;
+
+      const studentRows = sortedStudents
+        .map(
+          (st, idx) => `
+          <tr>
+            <td style="text-align:center;">${idx + 1}</td>
+            <td style="text-align:left;">${escapeHtml(st.regNo)}</td>
+            <td style="text-align:left;">${escapeHtml(st.name)}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        `
+        )
+        .join('');
+
+      document.getElementById('modalPaper').innerHTML = `
+        <table class="excel-grid">
+          <tr>
+            <td colspan="6" class="no-border" style="text-align:center; font-weight:bold; font-size:13px;">${escapeHtml(collegeName)}</td>
+          </tr>
+          <tr>
+            <td colspan="6" class="no-border" style="text-align:center; font-weight:bold; font-size:13px; padding-bottom:10px;">Consolidated Attendance Percentage Report</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="font-weight:bold; width:165px;">Exam:</td>
+            <td colspan="4">${escapeHtml(examName)}</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="font-weight:bold;">Programme:</td>
+            <td colspan="4">${escapeHtml(fileObj.programmeFull)}</td>
+          </tr>
+          <tr>
+            <td colspan="2" style="font-weight:bold;">Total Working Days:</td>
+            <td colspan="4">${workingDays}</td>
+          </tr>
+          <tr style="font-weight:bold; text-align:center;">
+            <th style="width:45px;">#</th>
+            <th style="width:135px;">Register Number</th>
+            <th>Name of the Student</th>
+            <th style="width:85px;">Total<br/>Present</th>
+            <th style="width:90px;">Percentage<br/>(%)</th>
+            <th style="width:140px;">Condonation Details</th>
+          </tr>
+          ${studentRows}
+          <tr><td colspan="6" class="no-border" style="height:34px;"></td></tr>
+          <tr style="font-weight:bold;">
+            <td class="no-border"></td>
+            <td class="no-border" style="text-align:left;">Signature of the Class Teacher</td>
+            <td colspan="2" class="no-border" style="text-align:center;">Signature of the HoD</td>
+            <td colspan="2" class="no-border" style="text-align:right;">Signature of the Principal</td>
+          </tr>
+        </table>
+      `;
+
+      document.getElementById('previewModal').classList.remove('hidden');
+    }
+
+    function closePreviewModal(event) {
+      if (!event || event.target.id === 'previewModal') {
+        document.getElementById('previewModal').classList.add('hidden');
+      }
+    }
+
+    /* ==========================================================================
+       EXCELJS EXPORT 1: INTERNAL MARKS REPORT WORKBOOK (EXACT REFERENCE FORMAT)
+       ========================================================================== */
+    async function exportInternalMarksWorkbook() {
+      if (state.coursesMap.size === 0) return;
+      if (typeof ExcelJS === 'undefined') {
+        showToast('ExcelJS library not loaded. Please check your internet connection.');
+        return;
+      }
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'CUFYUGP Internal Marks Generator';
+      workbook.created = new Date();
+
+      const collegeName = document.getElementById('collegeNameInput').value.trim() || 'MIC ARTS AND SCIENCE COLLEGE ,ATHANIKAL,VALLUVAMBRAM';
+      const examName = document.getElementById('examNameInput').value.trim() || 'First Semester FYUG Examination November 2026';
+      const autoSumFormula = document.getElementById('chkInternalFormula').checked;
+      const includeSummary = document.getElementById('chkAuditSummary').checked;
 
       const thinBorder = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } }
       };
 
-      const sortedCodes = Object.keys(state.courses).sort();
-      for (const code of sortedCodes) {
-        const c = state.courses[code];
-        const sheetName = code.replace(/[\\\/\?\*\[\]:]/g, '').slice(0, 31);
-        const ws = wb.addWorksheet(sheetName, {
+      const usedTabNames = new Set();
+      const sortedCourses = Array.from(state.coursesMap.values()).sort((a, b) =>
+        a.code.localeCompare(b.code)
+      );
+
+      for (const entry of sortedCourses) {
+        const sheetName = sanitizeExcelTabName(entry.code, usedTabNames);
+        const ws = workbook.addWorksheet(sheetName, {
           pageSetup: {
             paperSize: 9, // A4
             orientation: 'portrait',
             fitToPage: true,
             fitToWidth: 1,
-            fitToHeight: 0
+            fitToHeight: 0,
+            margins: { left: 0.35, right: 0.35, top: 0.45, bottom: 0.45, header: 0.2, footer: 0.2 }
           }
         });
 
         ws.columns = [
-          { width: 6 },
-          { width: 16 },
-          { width: 30 },
-          { width: 14 },
-          { width: 13 },
-          { width: 13 },
-          { width: 13 },
-          { width: 13 }
+          { width: 6 },   // A: Sl. No.
+          { width: 16 },  // B: Register Number
+          { width: 29 },  // C: Name of the Student
+          { width: 14 },  // D: Test Paper / Mid-Sem Exam (10)
+          { width: 13 },  // E: Seminar / Viva / Quiz (6)
+          { width: 13 },  // F: Assignment (4)
+          { width: 13 },  // G: Total Internal Marks (20)
+          { width: 13 }   // H: Internal Open ended (10/5)
         ];
 
-        // Rows 1 to 4 merged A..H
-        const progsStr = Array.from(c.programmes).sort().join(', ');
-        const headers = [
-          { text: college, size: 14, bold: true },
-          { text: `Internal Marks Report - ${c.title} (${code})`, size: 12, bold: false },
-          { text: `Exam : ${exam}`, size: 12, bold: false },
-          { text: `Programme : ${progsStr}`, size: 12, bold: false }
+        const progsText = Array.from(entry.programmes).sort().join(', ');
+
+        // Rows 1 to 4 Merged Headers
+        const headerConfigs = [
+          { row: 1, text: collegeName, bold: true, size: 14, height: 24 },
+          { row: 2, text: `Internal Marks Report - ${entry.title} (${entry.code})`, bold: false, size: 12, height: 22 },
+          { row: 3, text: `Exam : ${examName}`, bold: false, size: 12, height: 20 },
+          { row: 4, text: `Programme : ${progsText}`, bold: false, size: 12, height: 22 }
         ];
 
-        headers.forEach((h, i) => {
-          const rIdx = i + 1;
-          ws.mergeCells(rIdx, 1, rIdx, 8);
+        for (const hc of headerConfigs) {
+          ws.mergeCells(hc.row, 1, hc.row, 8);
+          const r = ws.getRow(hc.row);
+          r.height = hc.height;
           for (let col = 1; col <= 8; col++) {
-            const cell = ws.getCell(rIdx, col);
-            if (col === 1) cell.value = h.text;
-            cell.font = { name: 'Cambria', size: h.size, bold: h.bold };
-            cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+            const cell = r.getCell(col);
             cell.border = thinBorder;
+            if (col === 1) {
+              cell.value = hc.text;
+              cell.font = { name: 'Cambria', size: hc.size, bold: hc.bold };
+              cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+            }
           }
-        });
+        }
+
+        // Row 5: Blank Spacer Row
+        ws.getRow(5).height = 14;
 
         // Row 6: Table Column Headers
         const r6 = ws.getRow(6);
         r6.height = 60;
-        const colTitles = [
+        const headers = [
           'Sl. No.',
           'Register Number',
           'Name of the Student',
@@ -1565,169 +2406,193 @@
           'Seminar /\nViva / Quiz\n(6)',
           'Assignment\n(4)',
           'Total Internal\nMarks\n(20)',
-          `Internal Open\nended\n(${c.openEnded})`
+          `Internal Open\nended\n(${entry.openEndedMax})`
         ];
-        colTitles.forEach((title, idx) => {
-          const cell = r6.getCell(idx + 1);
-          cell.value = title;
+
+        headers.forEach((hText, i) => {
+          const cell = r6.getCell(i + 1);
+          cell.value = hText;
           cell.font = { name: 'Cambria', size: 11, bold: true };
-          cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+          cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
           cell.border = thinBorder;
         });
 
-        // Student rows starting at Row 7
-        c.students.forEach((stu, idx) => {
-          const rNum = 7 + idx;
-          const row = ws.getRow(rNum);
+        // Rows 7..N: Student Rows sorted ascending by Register Number
+        entry.students.forEach((st, idx) => {
+          const rowNum = 7 + idx;
+          const row = ws.getRow(rowNum);
           row.height = 20.1;
 
           const c1 = row.getCell(1);
           c1.value = idx + 1;
           c1.font = { name: 'Cambria', size: 11 };
-          c1.alignment = { horizontal: 'center', vertical: 'center' };
+          c1.alignment = { horizontal: 'center', vertical: 'middle' };
           c1.border = thinBorder;
 
           const c2 = row.getCell(2);
-          c2.value = stu.regNo;
+          c2.value = st.regNo;
           c2.font = { name: 'Cambria', size: 11 };
-          c2.alignment = { horizontal: 'center', vertical: 'center' };
+          c2.alignment = { horizontal: 'center', vertical: 'middle' };
           c2.border = thinBorder;
 
           const c3 = row.getCell(3);
-          c3.value = stu.name;
+          c3.value = st.name;
           c3.font = { name: 'Cambria', size: 11 };
-          c3.alignment = { horizontal: 'left', vertical: 'center', wrapText: true };
+          c3.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
           c3.border = thinBorder;
 
           for (let col = 4; col <= 8; col++) {
             const cell = row.getCell(col);
-            if (col === 7 && useFormula) {
-              cell.value = { formula: `IF(COUNT(D${rNum}:F${rNum})=0,"",SUM(D${rNum}:F${rNum}))` };
+            if (col === 7 && autoSumFormula) {
+              cell.value = { formula: `IF(COUNT(D${rowNum}:F${rowNum})=0,"",SUM(D${rowNum}:F${rowNum}))` };
+            } else {
+              cell.value = null;
             }
             cell.font = { name: 'Cambria', size: 11 };
-            cell.alignment = { horizontal: 'center', vertical: 'center' };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
             cell.border = thinBorder;
           }
         });
 
-        // Footer Signature Row (4 blank rows after last student, matching reference)
-        const footerRowIdx = 7 + c.students.length + 3;
-        const fRow = ws.getRow(footerRowIdx);
-        fRow.height = 28.5;
+        // 3 Blank Rows + Signature Footer Row
+        const lastStudentRow = 6 + entry.students.length;
+        for (let b = 1; b <= 3; b++) {
+          ws.getRow(lastStudentRow + b).height = 18;
+        }
 
-        const sigTeacher = fRow.getCell(2);
+        const sigRow = ws.getRow(lastStudentRow + 4);
+        sigRow.height = 28.5;
+
+        const sigTeacher = sigRow.getCell(2);
         sigTeacher.value = 'Concerned Teacher';
         sigTeacher.font = { name: 'Cambria', size: 11, bold: true };
-        sigTeacher.alignment = { horizontal: 'left', vertical: 'center' };
+        sigTeacher.alignment = { horizontal: 'left', vertical: 'middle' };
 
-        const sigHod = fRow.getCell(5);
+        const sigHod = sigRow.getCell(5);
         sigHod.value = 'HoD';
         sigHod.font = { name: 'Cambria', size: 11, bold: true };
-        sigHod.alignment = { horizontal: 'center', vertical: 'center' };
+        sigHod.alignment = { horizontal: 'center', vertical: 'middle' };
 
-        const sigPrincipal = fRow.getCell(8);
+        const sigPrincipal = sigRow.getCell(8);
         sigPrincipal.value = 'Principal';
         sigPrincipal.font = { name: 'Cambria', size: 11, bold: true };
-        sigPrincipal.alignment = { horizontal: 'right', vertical: 'center' };
+        sigPrincipal.alignment = { horizontal: 'right', vertical: 'middle' };
       }
 
-      if (chkAuditSheet.checked) {
-        appendAuditWorksheet(wb);
+      if (includeSummary) {
+        addAuditSummarySheet(workbook, thinBorder);
       }
 
-      const rawName = (internalFileInput.value.trim() || 'FYUGP_INTERNAL_MARKS').replace(/\.xlsx$/i, '');
-      await saveWorkbook(wb, `${rawName}.xlsx`);
-    });
+      const buffer = await workbook.xlsx.writeBuffer();
+      const baseName = (document.getElementById('internalFileNameInput').value.trim() || 'FYUGP_INTERNAL_MARKS').replace(/\.xlsx$/i, '');
+      saveAs(
+        new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+        `${baseName}.xlsx`
+      );
+      showToast(`Downloaded ${baseName}.xlsx (${sortedCourses.length} sheets).`);
+    }
 
-    // =========================================================================
-    // EXCEL GENERATION 2: APC CONSOLIDATED ATTENDANCE REPORT (FYUG 2026 Admin.xlsx exact design + Cambria font)
-    // =========================================================================
-    btnDownloadApc.addEventListener('click', async () => {
-      if (!window.ExcelJS) {
-        alert('ExcelJS library is still loading. Please try again in a moment.');
+    /* ==========================================================================
+       EXCELJS EXPORT 2: APC CONSOLIDATED ATTENDANCE REPORT WORKBOOK
+       ========================================================================== */
+    async function exportApcAttendanceWorkbook() {
+      if (state.uploadedFiles.length === 0) return;
+      if (typeof ExcelJS === 'undefined') {
+        showToast('ExcelJS library not loaded. Please check your internet connection.');
         return;
       }
-      const wb = new ExcelJS.Workbook();
-      const college = collegeNameInput.value.trim() || 'MIC ARTS AND SCIENCE COLLEGE, ATHANIKAL, VALLUVAMBRAM';
-      const exam = examNameInput.value.trim() || state.examName || 'First Semester FYUG Examination November 2026';
-      const workingDays = parseInt(workingDaysInput.value, 10) || 90;
-      const useFormula = chkApcFormula.checked;
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'CUFYUGP APC Attendance Generator';
+      workbook.created = new Date();
+
+      const collegeName = document.getElementById('collegeNameInput').value.trim() || 'MIC ARTS AND SCIENCE COLLEGE ,ATHANIKAL,VALLUVAMBRAM';
+      const defaultExamName = document.getElementById('examNameInput').value.trim();
+      const workingDays = parseInt(document.getElementById('workingDaysInput').value, 10) || 90;
+      const autoApcFormula = document.getElementById('chkApcFormula').checked;
+      const includeSummary = document.getElementById('chkAuditSummary').checked;
 
       const thinBorder = {
-        top: { style: 'thin' },
-        left: { style: 'thin' },
-        bottom: { style: 'thin' },
-        right: { style: 'thin' }
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } }
       };
 
-      const sortedProgKeys = Object.keys(state.programmes).sort();
-      for (const progKey of sortedProgKeys) {
-        const p = state.programmes[progKey];
-        const ws = wb.addWorksheet(p.sheetName, {
+      const usedTabNames = new Set();
+
+      for (const fileObj of state.uploadedFiles) {
+        const sheetName = sanitizeExcelTabName(fileObj.programmeShort, usedTabNames);
+        const examName = defaultExamName || fileObj.examName || 'First Semester FYUG Examination November 2026';
+
+        const ws = workbook.addWorksheet(sheetName, {
           pageSetup: {
             paperSize: 9, // A4
             orientation: 'portrait',
             fitToPage: true,
             fitToWidth: 1,
-            fitToHeight: 0
+            fitToHeight: 0,
+            margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.5, header: 0.25, footer: 0.25 }
           }
         });
 
-        // Exact column widths from FYUG 2026 Admin.xlsx
         ws.columns = [
-          { width: 5.5 },  // A: #
-          { width: 20 },   // B: Register Number
-          { width: 42 },   // C: Name of the Student
-          { width: 12 },   // D: Total Present
-          { width: 13 },   // E: Percentage (%)
-          { width: 21 }    // F: Condonation Details
+          { width: 5.5 }, // A: #
+          { width: 20 },  // B: Register Number
+          { width: 40 },  // C: Name of the Student
+          { width: 12 },  // D: Total Present
+          { width: 13 },  // E: Percentage (%)
+          { width: 22 }   // F: Condonation Details
         ];
 
-        // Row 1: College Name (Merged A1:F1, centered, bold, Cambria 12, no border — exact match to reference layout)
-        ws.mergeCells('A1:F1');
+        // Row 1: College Name
+        ws.mergeCells(1, 1, 1, 6);
         const r1 = ws.getRow(1);
         r1.height = 22;
-        const cA1 = ws.getCell('A1');
-        cA1.value = college;
-        cA1.font = { name: 'Cambria', size: 12, bold: true };
-        cA1.alignment = { horizontal: 'center', vertical: 'center' };
+        r1.getCell(1).value = collegeName;
+        r1.getCell(1).font = { name: 'Calibri', size: 12, bold: true };
+        r1.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
 
-        // Row 2: Report Subtitle (Merged A2:F2, centered, bold, Cambria 11, no border)
-        ws.mergeCells('A2:F2');
+        // Row 2: Consolidated Attendance Percentage Report
+        ws.mergeCells(2, 1, 2, 6);
         const r2 = ws.getRow(2);
-        r2.height = 20.1;
-        const cA2 = ws.getCell('A2');
-        cA2.value = 'Consolidated Attendance Percentage Report';
-        cA2.font = { name: 'Cambria', size: 11, bold: true };
-        cA2.alignment = { horizontal: 'center', vertical: 'center' };
+        r2.height = 22;
+        r2.getCell(1).value = 'Consolidated Attendance Percentage Report';
+        r2.getCell(1).font = { name: 'Calibri', size: 12, bold: true };
+        r2.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
 
-        // Rows 3, 4, 5: Metadata block (A3:B3 & C3:F3, A4:B4 & C4:F4, A5:B5 & C5:F5) with thin borders & Cambria 11
+        // Rows 3, 4, 5: Exam, Programme, Total Working Days
         const metaRows = [
-          { row: 3, label: 'Exam:', val: exam },
-          { row: 4, label: 'Programme:', val: p.progHeader },
+          { row: 3, label: 'Exam:', val: examName },
+          { row: 4, label: 'Programme:', val: fileObj.programmeFull },
           { row: 5, label: 'Total Working Days:', val: workingDays }
         ];
 
-        for (const m of metaRows) {
-          const r = ws.getRow(m.row);
-          r.height = 19;
-          ws.mergeCells(m.row, 1, m.row, 2);
-          ws.mergeCells(m.row, 3, m.row, 6);
+        for (const mr of metaRows) {
+          ws.mergeCells(mr.row, 1, mr.row, 2);
+          ws.mergeCells(mr.row, 3, mr.row, 6);
+          const row = ws.getRow(mr.row);
+          row.height = 19;
 
           for (let col = 1; col <= 6; col++) {
-            const cell = ws.getCell(m.row, col);
-            if (col === 1) cell.value = m.label;
-            if (col === 3) cell.value = m.val;
-            cell.font = { name: 'Cambria', size: 11, bold: false };
-            cell.alignment = { horizontal: 'left', vertical: 'center' };
-            cell.border = thinBorder;
+            row.getCell(col).border = thinBorder;
           }
+
+          const lblCell = row.getCell(1);
+          lblCell.value = mr.label;
+          lblCell.font = { name: 'Calibri', size: 11, bold: true };
+          lblCell.alignment = { horizontal: 'left', vertical: 'middle' };
+
+          const valCell = row.getCell(3);
+          valCell.value = mr.val;
+          valCell.font = { name: 'Calibri', size: 11, bold: false };
+          valCell.alignment = { horizontal: 'left', vertical: 'middle' };
         }
 
-        // Row 6: Table Header Row (Height 28.5, Bold, Centered, Wrapped, Cambria 11, Thin Borders)
+        // Row 6: Table Column Headers
         const r6 = ws.getRow(6);
         r6.height = 28.5;
-        const apcHeaders = [
+        const headers = [
           '#',
           'Register Number',
           'Name of the Student',
@@ -1735,127 +2600,150 @@
           'Percentage\n(%)',
           'Condonation Details'
         ];
-        apcHeaders.forEach((hText, idx) => {
-          const cell = r6.getCell(idx + 1);
+
+        headers.forEach((hText, i) => {
+          const cell = r6.getCell(i + 1);
           cell.value = hText;
-          cell.font = { name: 'Cambria', size: 11, bold: true };
-          cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
+          cell.font = { name: 'Calibri', size: 11, bold: true };
+          cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
           cell.border = thinBorder;
         });
 
-        // Student rows starting at Row 7 (Height 24.0, Cambria 11, Thin Borders)
-        p.students.forEach((stu, idx) => {
-          const rNum = 7 + idx;
-          const row = ws.getRow(rNum);
-          row.height = 24.0;
+        // Rows 7..N: Students sorted ascending by Register Number
+        const sortedStudents = [...fileObj.students].sort((a, b) =>
+          a.regNo.localeCompare(b.regNo, undefined, { numeric: true })
+        );
+
+        sortedStudents.forEach((st, idx) => {
+          const rowNum = 7 + idx;
+          const row = ws.getRow(rowNum);
+          row.height = 24;
 
           const c1 = row.getCell(1);
           c1.value = idx + 1;
-          c1.font = { name: 'Cambria', size: 11 };
-          c1.alignment = { horizontal: 'center', vertical: 'center' };
+          c1.font = { name: 'Calibri', size: 11 };
+          c1.alignment = { horizontal: 'center', vertical: 'middle' };
           c1.border = thinBorder;
 
           const c2 = row.getCell(2);
-          c2.value = stu.regNo;
-          c2.font = { name: 'Cambria', size: 11 };
-          c2.alignment = { horizontal: 'left', vertical: 'center' };
+          c2.value = st.regNo;
+          c2.font = { name: 'Calibri', size: 11 };
+          c2.alignment = { horizontal: 'left', vertical: 'middle' };
           c2.border = thinBorder;
 
           const c3 = row.getCell(3);
-          c3.value = stu.name;
-          c3.font = { name: 'Cambria', size: 11 };
-          c3.alignment = { horizontal: 'left', vertical: 'center' };
+          c3.value = st.name;
+          c3.font = { name: 'Calibri', size: 11 };
+          c3.alignment = { horizontal: 'left', vertical: 'middle' };
           c3.border = thinBorder;
 
           const c4 = row.getCell(4);
-          c4.font = { name: 'Cambria', size: 11 };
-          c4.alignment = { horizontal: 'center', vertical: 'center' };
+          c4.value = null;
+          c4.font = { name: 'Calibri', size: 11 };
+          c4.alignment = { horizontal: 'center', vertical: 'middle' };
           c4.border = thinBorder;
 
           const c5 = row.getCell(5);
-          if (useFormula) {
-            c5.value = { formula: `IF(D${rNum}="","",ROUND((D${rNum}/$C$5)*100,2))` };
+          if (autoApcFormula) {
+            c5.value = { formula: `IF(D${rowNum}="","",ROUND((D${rowNum}/$C$5)*100,2))` };
+          } else {
+            c5.value = null;
           }
-          c5.font = { name: 'Cambria', size: 11 };
-          c5.alignment = { horizontal: 'center', vertical: 'center' };
+          c5.font = { name: 'Calibri', size: 11 };
+          c5.alignment = { horizontal: 'center', vertical: 'middle' };
           c5.border = thinBorder;
 
           const c6 = row.getCell(6);
-          if (useFormula) {
-            c6.value = { formula: `IF(E${rNum}="","",IF(E${rNum}>=75,"Eligible",IF(E${rNum}>=65,"Single Condonation",IF(E${rNum}>=55,"Double Condonation",IF(E${rNum}>=50,"Provisional","Ineligible (<50%)")))))` };
+          if (autoApcFormula) {
+            c6.value = {
+              formula: `IF(E${rowNum}="","",IF(E${rowNum}>=75,"Eligible",IF(E${rowNum}>=65,"Condonation (Single)",IF(E${rowNum}>=55,"Condonation (Double)",IF(E${rowNum}>=50,"Provisional Reg.","Ineligible (<50%)")))))`
+            };
+          } else {
+            c6.value = null;
           }
-          c6.font = { name: 'Cambria', size: 11 };
-          c6.alignment = { horizontal: 'center', vertical: 'center' };
+          c6.font = { name: 'Calibri', size: 11 };
+          c6.alignment = { horizontal: 'center', vertical: 'middle' };
           c6.border = thinBorder;
         });
 
-        // Footer Signature Row (4 blank rows after last student, matching FYUG 2026 Admin.xlsx, Cambria 11 Bold)
-        const footerRowIdx = 7 + p.students.length + 4;
-        const fRow = ws.getRow(footerRowIdx);
-        fRow.height = 22;
+        // 4 Blank Rows + Signature Row
+        const lastStudentRow = 6 + sortedStudents.length;
+        for (let b = 1; b <= 4; b++) {
+          ws.getRow(lastStudentRow + b).height = 18;
+        }
 
-        const sigClassTeacher = fRow.getCell(2);
-        sigClassTeacher.value = 'Signature of the Class Teacher';
-        sigClassTeacher.font = { name: 'Cambria', size: 11, bold: true };
-        sigClassTeacher.alignment = { horizontal: 'left', vertical: 'center' };
+        const sigRow = ws.getRow(lastStudentRow + 5);
+        sigRow.height = 24;
 
-        const sigHod = fRow.getCell(3);
+        const sigTeacher = sigRow.getCell(2);
+        sigTeacher.value = 'Signature of the Class Teacher';
+        sigTeacher.font = { name: 'Calibri', size: 11, bold: true };
+        sigTeacher.alignment = { horizontal: 'left', vertical: 'middle' };
+
+        const sigHod = sigRow.getCell(3);
         sigHod.value = 'Signature of the HoD';
-        sigHod.font = { name: 'Cambria', size: 11, bold: true };
-        sigHod.alignment = { horizontal: 'center', vertical: 'center' };
+        sigHod.font = { name: 'Calibri', size: 11, bold: true };
+        sigHod.alignment = { horizontal: 'center', vertical: 'middle' };
 
-        const sigPrincipal = fRow.getCell(6);
+        const sigPrincipal = sigRow.getCell(6);
         sigPrincipal.value = 'Signature of the Principal';
-        sigPrincipal.font = { name: 'Cambria', size: 11, bold: true };
-        sigPrincipal.alignment = { horizontal: 'right', vertical: 'center' };
+        sigPrincipal.font = { name: 'Calibri', size: 11, bold: true };
+        sigPrincipal.alignment = { horizontal: 'right', vertical: 'middle' };
       }
 
-      if (chkAuditSheet.checked) {
-        appendAuditWorksheet(wb);
+      if (includeSummary) {
+        addAuditSummarySheet(workbook, thinBorder);
       }
 
-      const rawName = (apcFileInput.value.trim() || 'FYUG_APC_ATTENDANCE').replace(/\.xlsx$/i, '');
-      await saveWorkbook(wb, `${rawName}.xlsx`);
-    });
-
-    function appendAuditWorksheet(wb) {
-      const ws = wb.addWorksheet('Verification_Audit');
-      ws.columns = [{ width: 36 }, { width: 16 }, { width: 18 }, { width: 22 }];
-      const hRow = ws.getRow(1);
-      ['Programme / Source File', 'Students', 'Challan Amount', 'Verification Status'].forEach((t, i) => {
-        const cell = hRow.getCell(i + 1);
-        cell.value = t;
-        cell.font = { name: 'Cambria', size: 11, bold: true };
-      });
-      state.filesAudit.forEach((f, idx) => {
-        const r = ws.getRow(idx + 2);
-        r.getCell(1).value = f.progRaw;
-        r.getCell(2).value = f.students.length;
-        r.getCell(3).value = f.totalCollection || 0;
-        r.getCell(4).value = f.serialGaps.length === 0 ? 'VERIFIED' : 'CHECK SERIALS';
-        for (let c = 1; c <= 4; c++) r.getCell(c).font = { name: 'Cambria', size: 11 };
-      });
+      const buffer = await workbook.xlsx.writeBuffer();
+      const baseName = (document.getElementById('apcFileNameInput').value.trim() || 'FYUG_APC_ATTENDANCE').replace(/\.xlsx$/i, '');
+      saveAs(
+        new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
+        `${baseName}.xlsx`
+      );
+      showToast(`Downloaded ${baseName}.xlsx (${state.uploadedFiles.length} sheets).`);
     }
 
-    async function saveWorkbook(wb, filename) {
-      const buffer = await wb.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
+    function addAuditSummarySheet(workbook, thinBorder) {
+      const ws = workbook.addWorksheet('AUDIT_SUMMARY');
+      ws.columns = [
+        { width: 8 },
+        { width: 22 },
+        { width: 42 },
+        { width: 16 },
+        { width: 18 }
+      ];
 
-    function escapeHtml(str) {
-      return String(str || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+      ws.mergeCells(1, 1, 1, 5);
+      const titleRow = ws.getRow(1);
+      titleRow.height = 24;
+      titleRow.getCell(1).value = 'CUFYUGP 2-Pass Double Verification & Audit Summary';
+      titleRow.getCell(1).font = { name: 'Calibri', size: 13, bold: true };
+      titleRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+
+      const headRow = ws.getRow(3);
+      headRow.height = 22;
+      ['#', 'Course / Tab Code', 'Course / Programme Title', 'Student Count', 'Open Ended Max'].forEach((h, idx) => {
+        const c = headRow.getCell(idx + 1);
+        c.value = h;
+        c.font = { name: 'Calibri', size: 11, bold: true };
+        c.alignment = { horizontal: 'center', vertical: 'middle' };
+        c.border = thinBorder;
+      });
+
+      const sortedCourses = Array.from(state.coursesMap.values()).sort((a, b) => a.code.localeCompare(b.code));
+      sortedCourses.forEach((c, idx) => {
+        const r = ws.getRow(4 + idx);
+        r.height = 20;
+        const vals = [idx + 1, c.code, c.title, c.students.length, c.openEndedMax];
+        vals.forEach((v, colIdx) => {
+          const cell = r.getCell(colIdx + 1);
+          cell.value = v;
+          cell.font = { name: 'Calibri', size: 11 };
+          cell.alignment = { horizontal: colIdx === 2 ? 'left' : 'center', vertical: 'middle' };
+          cell.border = thinBorder;
+        });
+      });
     }
   </script>
 </body>
